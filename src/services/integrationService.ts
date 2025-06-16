@@ -62,10 +62,18 @@ export const createIntegration = async (newIntegration: { source: IntegrationSou
   if (!newIntegration.source || !newIntegration.name) {
     throw new Error("Preencha todos os campos obrigatórios");
   }
+
+  // Get the current user
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('Usuário não autenticado');
+  }
+
   const { data, error } = await supabase.from('integrations').insert({
     source: newIntegration.source,
     name: newIntegration.name,
     config: newIntegration.config as Json,
+    user_id: user.id,
   }).select().single();
   if (error) throw error;
   return data;
