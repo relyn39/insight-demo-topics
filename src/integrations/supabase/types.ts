@@ -401,7 +401,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      ai_provider: "openai" | "google"
+      ai_provider: "openai" | "google" | "claude" | "deepseek"
       feedback_priority: "low" | "medium" | "high" | "critical"
       feedback_source: "jira" | "notion" | "zoho" | "manual" | "zapier"
       feedback_status: "new" | "in_progress" | "resolved" | "closed"
@@ -524,7 +524,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      ai_provider: ["openai", "google"],
+      ai_provider: ["openai", "google", "claude", "deepseek"],
       feedback_priority: ["low", "medium", "high", "critical"],
       feedback_source: ["jira", "notion", "zoho", "manual", "zapier"],
       feedback_status: ["new", "in_progress", "resolved", "closed"],

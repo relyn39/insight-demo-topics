@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
+import type { Database } from '@/integrations/supabase/types';
 
 const formSchema = z.object({
   title: z.string().min(1, { message: 'O título é obrigatório.' }),
@@ -47,8 +49,8 @@ export const AddManualFeedback = ({ setOpen }: { setOpen: (open: boolean) => voi
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado.');
 
-      const feedbackData = {
-        ...values,
+      const feedbackData: Database['public']['Tables']['feedbacks']['Insert'] = {
+        title: values.title,
         description: values.description || null,
         customer_name: values.customer_name || null,
         interviewee_name: values.interviewee_name || null,

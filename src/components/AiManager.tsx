@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,6 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
+import type { Database } from '@/integrations/supabase/types';
+
+type AIProvider = Database['public']['Enums']['ai_provider'];
 
 const aiConfigSchema = z.object({
   provider: z.enum(['openai', 'google', 'claude', 'deepseek']),
@@ -78,15 +82,9 @@ export const AiManager = () => {
     mutationFn: async (values: AiConfigFormValues) => {
         const userId = await getUserId();
         
-        const dataToUpsert: {
-            user_id: string;
-            provider: 'openai' | 'google' | 'claude' | 'deepseek';
-            model: string;
-            updated_at: string;
-            api_key?: string;
-        } = { 
+        const dataToUpsert: Database['public']['Tables']['ai_configurations']['Insert'] = { 
             user_id: userId,
-            provider: values.provider,
+            provider: values.provider as AIProvider,
             model: values.model,
             updated_at: new Date().toISOString()
         };

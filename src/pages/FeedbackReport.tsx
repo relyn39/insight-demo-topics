@@ -11,8 +11,11 @@ import { ReviewInsightDialog, InsightFormData } from '@/components/ReviewInsight
 import { FeedbackToolbar } from '@/components/feedback/FeedbackToolbar';
 import { FeedbackTable } from '@/components/feedback/FeedbackTable';
 import { useDemoMode } from '@/hooks/useDemoMode';
+import type { Database } from '@/integrations/supabase/types';
 
 const ITEMS_PER_PAGE = 10;
+
+type FeedbackSource = Database['public']['Enums']['feedback_source'];
 
 const FeedbackReport = () => {
     const queryClient = useQueryClient();
@@ -59,11 +62,15 @@ const FeedbackReport = () => {
                 }
 
                 if (debouncedTagFilter) {
-                    filteredFeedbacks = filteredFeedbacks.filter(fb => 
-                        fb.analysis?.tags?.some((tag: string) => 
-                            tag.toLowerCase().includes(debouncedTagFilter.toLowerCase().trim())
-                        )
-                    );
+                    filteredFeedbacks = filteredFeedbacks.filter(fb => {
+                        if (fb.analysis && typeof fb.analysis === 'object' && 'tags' in fb.analysis) {
+                            const tags = fb.analysis.tags as string[];
+                            return Array.isArray(tags) && tags.some((tag: string) => 
+                                tag.toLowerCase().includes(debouncedTagFilter.toLowerCase().trim())
+                            );
+                        }
+                        return false;
+                    });
                 }
 
                 const from = (page - 1) * ITEMS_PER_PAGE;
@@ -85,8 +92,8 @@ const FeedbackReport = () => {
                 .order('created_at', { ascending: false })
                 .range(from, to);
 
-            if (sourceFilter !== 'all') {
-                query = query.eq('source', sourceFilter);
+            if (sourceFilter !== 'all' && sourceFilter) {
+                query = query.eq('source', sourceFilter as FeedbackSource);
             }
 
             if (debouncedTagFilter) {
@@ -145,7 +152,10 @@ const FeedbackReport = () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Usuário não autenticado.");
     
-            const insightToInsert = { ...insightData, user_id: user.id };
+            const insightToInsert: Database['public']['Tables']['insights']['Insert'] = { 
+                ...insightData, 
+                user_id: user.id 
+            };
             const { error } = await supabase.from('insights').insert(insightToInsert);
             if (error) throw error;
         },

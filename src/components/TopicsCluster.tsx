@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import type { Json } from '@/integrations/supabase/types';
 
 interface Topic {
   id: number;
@@ -16,7 +17,7 @@ interface Topic {
   keywords: string[];
 }
 
-const fetchLatestTopics = async () => {
+const fetchLatestTopics = async (): Promise<Topic[] | null> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("User not authenticated");
 
@@ -33,7 +34,11 @@ const fetchLatestTopics = async () => {
         throw new Error(error.message);
     }
 
-    return data?.topics ?? null;
+    if (!data?.topics) return null;
+    
+    // Parse the JSONB data to ensure it's a Topic array
+    const topics = data.topics as Topic[];
+    return Array.isArray(topics) ? topics : null;
 };
 
 const analyzeNewTopics = async () => {
@@ -119,7 +124,7 @@ export const TopicsCluster = () => {
                             {isError ? "Ocorreu um erro ao buscar os tópicos." : "Nenhuma análise de tópicos encontrada."}
                         </p>
                         <p className="text-sm text-muted-foreground mt-1">
-                            {isError ? error.message : "Clique em \"Analisar Tópicos\" para gerar a primeira análise."}
+                            {isError ? (error as Error)?.message : "Clique em \"Analisar Tópicos\" para gerar a primeira análise."}
                         </p>
                     </div>
                 )}
