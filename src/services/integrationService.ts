@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { QueryClient } from '@tanstack/react-query';
 import { Integration, SyncLog, IntegrationSource, IntegrationConfig } from '@/components/integrations/types';
+import type { Json } from '@/integrations/supabase/types';
 
 export const syncIntegrations = async (queryClient: QueryClient) => {
   const { data: integrations, error: integrationsError } = await supabase
@@ -64,7 +65,7 @@ export const createIntegration = async (newIntegration: { source: IntegrationSou
   const { data, error } = await supabase.from('integrations').insert({
     source: newIntegration.source,
     name: newIntegration.name,
-    config: newIntegration.config,
+    config: newIntegration.config as Json,
   }).select().single();
   if (error) throw error;
   return data;
@@ -76,7 +77,7 @@ export const updateIntegration = async (integrationToUpdate: Integration) => {
     .update({
       name: integrationToUpdate.name,
       sync_frequency: integrationToUpdate.sync_frequency,
-      config: integrationToUpdate.config,
+      config: integrationToUpdate.config as Json,
     })
     .eq('id', integrationToUpdate.id)
     .select()
@@ -102,4 +103,3 @@ export const syncIntegration = async (integration: Integration) => {
     if (error) throw error;
     return data;
 };
-

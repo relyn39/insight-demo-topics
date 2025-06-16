@@ -64,8 +64,8 @@ const FeedbackReport = () => {
                 if (debouncedTagFilter) {
                     filteredFeedbacks = filteredFeedbacks.filter(fb => {
                         if (fb.analysis && typeof fb.analysis === 'object' && 'tags' in fb.analysis) {
-                            const tags = fb.analysis.tags as string[];
-                            return Array.isArray(tags) && tags.some((tag: string) => 
+                            const analysis = fb.analysis as { tags?: string[] };
+                            return Array.isArray(analysis.tags) && analysis.tags.some((tag: string) => 
                                 tag.toLowerCase().includes(debouncedTagFilter.toLowerCase().trim())
                             );
                         }
@@ -154,7 +154,12 @@ const FeedbackReport = () => {
     
             const insightToInsert: Database['public']['Tables']['insights']['Insert'] = { 
                 ...insightData, 
-                user_id: user.id 
+                user_id: user.id,
+                // Ensure required fields are provided with defaults
+                title: insightData.title || 'Insight sem título',
+                description: insightData.description || 'Sem descrição',
+                type: insightData.type || 'other',
+                severity: insightData.severity || 'info'
             };
             const { error } = await supabase.from('insights').insert(insightToInsert);
             if (error) throw error;

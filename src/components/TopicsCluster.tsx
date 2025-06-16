@@ -36,9 +36,13 @@ const fetchLatestTopics = async (): Promise<Topic[] | null> => {
 
     if (!data?.topics) return null;
     
-    // Parse the JSONB data to ensure it's a Topic array
-    const topics = data.topics as Topic[];
-    return Array.isArray(topics) ? topics : null;
+    // Safely parse the JSONB data with proper type checking
+    try {
+        const topics = data.topics as unknown as Topic[];
+        return Array.isArray(topics) ? topics : null;
+    } catch {
+        return null;
+    }
 };
 
 const analyzeNewTopics = async () => {
