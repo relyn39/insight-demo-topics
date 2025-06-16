@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useDemoMode } from '@/hooks/useDemoMode';
 import type { Json } from '@/integrations/supabase/types';
 
 interface Topic {
@@ -16,6 +17,49 @@ interface Topic {
   change: number;
   keywords: string[];
 }
+
+const getDemoTopics = (): Topic[] => [
+  {
+    id: 1,
+    name: "Performance do App",
+    count: 234,
+    sentiment: 'negative',
+    change: -15,
+    keywords: ['lentidão', 'carregamento', 'crash', 'travamento']
+  },
+  {
+    id: 2,
+    name: "Interface do Usuário",
+    count: 189,
+    sentiment: 'positive',
+    change: 8,
+    keywords: ['design', 'usabilidade', 'navegação', 'intuitivo']
+  },
+  {
+    id: 3,
+    name: "Funcionalidades de Busca",
+    count: 156,
+    sentiment: 'neutral',
+    change: 0,
+    keywords: ['filtros', 'busca', 'resultados', 'precisão']
+  },
+  {
+    id: 4,
+    name: "Integração com Terceiros",
+    count: 112,
+    sentiment: 'negative',
+    change: -8,
+    keywords: ['API', 'sincronização', 'conexão', 'falhas']
+  },
+  {
+    id: 5,
+    name: "Suporte ao Cliente",
+    count: 98,
+    sentiment: 'positive',
+    change: 12,
+    keywords: ['atendimento', 'resposta', 'qualidade', 'eficiência']
+  }
+];
 
 const fetchLatestTopics = async (): Promise<Topic[] | null> => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -36,10 +80,9 @@ const fetchLatestTopics = async (): Promise<Topic[] | null> => {
 
     if (!data?.topics) return null;
     
-    // Safely parse the JSONB data with proper type checking
     try {
-        const topics = data.topics as unknown as Topic[];
-        return Array.isArray(topics) ? topics : null;
+        const topics = data.topics as unknown;
+        return Array.isArray(topics) ? topics as Topic[] : null;
     } catch {
         return null;
     }
@@ -58,16 +101,23 @@ const analyzeNewTopics = async () => {
 export const TopicsCluster = () => {
     const queryClient = useQueryClient();
     const { toast } = useToast();
+    const { isDemoMode } = useDemoMode();
 
     const { data: topics, isLoading, isError, error } = useQuery<Topic[] | null>({
         queryKey: ['latest-topics'],
-        queryFn: fetchLatestTopics,
+        queryFn: isDemoMode ? () => Promise.resolve(getDemoTopics()) : fetchLatestTopics,
     });
 
     const analyzeTopicsMutation = useMutation({
-        mutationFn: analyzeNewTopics,
+        mutationFn: isDemoMode ? 
+            () => Promise.resolve() : 
+            analyzeNewTopics,
         onSuccess: () => {
-            toast({ title: "Análise concluída!", description: "Os tópicos foram atualizados com base nos novos feedbacks." });
+            if (isDemoMode) {
+                toast({ title: "Análise concluída! (DEMO)", description: "Os tópicos foram atualizados em modo demonstração." });
+            } else {
+                toast({ title: "Análise concluída!", description: "Os tópicos foram atualizados com base nos novos feedbacks." });
+            }
             queryClient.invalidateQueries({ queryKey: ['latest-topics'] });
         },
         onError: (err: Error) => {
@@ -77,6 +127,11 @@ export const TopicsCluster = () => {
 
     const createOpportunityMutation = useMutation({
         mutationFn: async (topicName: string) => {
+            if (isDemoMode) {
+                // Simular criação em modo demo
+                return topicName;
+            }
+
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Usuário não autenticado.");
             
@@ -89,7 +144,10 @@ export const TopicsCluster = () => {
             return topicName;
         },
         onSuccess: (topicName) => {
-            toast({ title: "Oportunidade Criada!", description: `"${topicName}" foi adicionado ao seu roadmap.` });
+            const message = isDemoMode ? 
+                `"${topicName}" foi adicionado ao seu roadmap (DEMO).` :
+                `"${topicName}" foi adicionado ao seu roadmap.`;
+            toast({ title: "Oportunidade Criada!", description: message });
             queryClient.invalidateQueries({ queryKey: ['product_opportunities'] });
         },
         onError: (err: Error) => {
@@ -101,7 +159,9 @@ export const TopicsCluster = () => {
         <div className="bg-card rounded-xl p-6 shadow-sm border">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
                 <div>
-                    <h3 className="text-lg font-semibold text-card-foreground">Tópicos Mais Discutidos</h3>
+                    <h3 className="text-lg font-semibold text-card-foreground">
+                        Tópicos Mais Discutidos {isDemoMode && <span className="text-sm text-muted-foreground">(DEMO)</span>}
+                    </h3>
                     <p className="text-sm text-muted-foreground">Transforme tópicos em oportunidades para seu roadmap</p>
                 </div>
                 <Button 
@@ -122,7 +182,7 @@ export const TopicsCluster = () => {
                     Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-lg" />)
                 )}
 
-                {!isLoading && (isError || (!topics || topics.length === 0)) && (
+                {!isLoading && (isError || (!topics || topics.length === 0)) && !isDemoMode && (
                     <div className="text-center py-10">
                         <p className="text-muted-foreground">
                             {isError ? "Ocorreu um erro ao buscar os tópicos." : "Nenhuma análise de tópicos encontrada."}

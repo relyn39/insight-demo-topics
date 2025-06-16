@@ -1,11 +1,15 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Edit } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import AddOpportunityDialog from './AddOpportunityDialog';
+import { EditOpportunityDialog } from './EditOpportunityDialog';
+import { useTribes } from '@/hooks/useTribes';
 
-// Tipos locais, já que types.ts é somente leitura
 type OpportunityStatus = 'backlog' | 'próximo' | 'em_andamento' | 'concluído';
 const statuses: OpportunityStatus[] = ['backlog', 'próximo', 'em_andamento', 'concluído'];
 
@@ -14,6 +18,10 @@ interface ProductOpportunity {
   title: string;
   description: string | null;
   status: OpportunityStatus;
+  tribe_id?: string;
+  squad_id?: string;
+  tribe?: { name: string };
+  squad?: { name: string };
 }
 
 const statusTranslations: Record<OpportunityStatus, string> = {
@@ -24,7 +32,15 @@ const statusTranslations: Record<OpportunityStatus, string> = {
 };
 
 const fetchOpportunities = async (): Promise<ProductOpportunity[]> => {
-  const { data, error } = await supabase.from('product_opportunities').select('*').order('created_at', { ascending: false });
+  const { data, error } = await supabase
+    .from('product_opportunities')
+    .select(`
+      *,
+      tribe:tribes(name),
+      squad:squads(name)
+    `)
+    .order('created_at', { ascending: false });
+  
   if (error) {
     console.error('Erro ao buscar oportunidades:', error);
     throw new Error('Não foi possível carregar as oportunidades do produto.');
@@ -33,10 +49,17 @@ const fetchOpportunities = async (): Promise<ProductOpportunity[]> => {
 };
 
 const Roadmap = () => {
+  const { tribes, squads } = useTribes();
+  const [editingOpportunity, setEditingOpportunity] = useState<ProductOpportunity | null>(null);
+  
   const { data: opportunities, isLoading, error } = useQuery<ProductOpportunity[]>({
     queryKey: ['product_opportunities'],
     queryFn: fetchOpportunities,
   });
+
+  const handleEditOpportunity = (opportunity: ProductOpportunity) => {
+    setEditingOpportunity(opportunity);
+  };
 
   return (
     <Card>
@@ -64,10 +87,38 @@ const Roadmap = () => {
                 <h3 className="font-semibold capitalize text-foreground mb-4">{statusTranslations[status]}</h3>
                 <div className="space-y-3 min-h-[100px]">
                   {opportunities.filter(o => o.status === status).map(opp => (
-                    <Card key={opp.id} className="shadow-sm hover:shadow-md transition-shadow">
+                    <Card key={opp.id} className="shadow-sm hover:shadow-md transition-shadow group">
                       <CardContent className="p-3">
-                        <h4 className="font-semibold text-sm text-card-foreground">{opp.title}</h4>
-                        {opp.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{opp.description}</p>}
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-sm text-card-foreground">{opp.title}</h4>
+                            {opp.description && (
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{opp.description}</p>
+                            )}
+                            
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {opp.tribe && (
+                                <Badge variant="outline" className="text-xs">
+                                  {opp.tribe.name}
+                                </Badge>
+                              )}
+                              {opp.squad && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {opp.squad.name}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity ml-2"
+                            onClick={() => handleEditOpportunity(opp)}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
@@ -88,6 +139,12 @@ const Roadmap = () => {
             </div>
         )}
       </CardContent>
+      
+      <EditOpportunityDialog
+        opportunity={editingOpportunity}
+        open={!!editingOpportunity}
+        onOpenChange={(open) => !open && setEditingOpportunity(null)}
+      />
     </Card>
   );
 };

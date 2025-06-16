@@ -164,8 +164,11 @@ export type Database = {
           description: string
           id: string
           severity: Database["public"]["Enums"]["insight_severity"]
+          squad_id: string | null
+          status: string | null
           tags: string[] | null
           title: string
+          tribe_id: string | null
           type: Database["public"]["Enums"]["insight_type"]
           user_id: string
         }
@@ -175,8 +178,11 @@ export type Database = {
           description: string
           id?: string
           severity: Database["public"]["Enums"]["insight_severity"]
+          squad_id?: string | null
+          status?: string | null
           tags?: string[] | null
           title: string
+          tribe_id?: string | null
           type: Database["public"]["Enums"]["insight_type"]
           user_id: string
         }
@@ -186,12 +192,30 @@ export type Database = {
           description?: string
           id?: string
           severity?: Database["public"]["Enums"]["insight_severity"]
+          squad_id?: string | null
+          status?: string | null
           tags?: string[] | null
           title?: string
+          tribe_id?: string | null
           type?: Database["public"]["Enums"]["insight_type"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "insights_squad_id_fkey"
+            columns: ["squad_id"]
+            isOneToOne: false
+            referencedRelation: "squads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insights_tribe_id_fkey"
+            columns: ["tribe_id"]
+            isOneToOne: false
+            referencedRelation: "tribes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       integrations: {
         Row: {
@@ -267,8 +291,10 @@ export type Database = {
           created_at: string | null
           description: string | null
           id: string
+          squad_id: string | null
           status: Database["public"]["Enums"]["opportunity_status"]
           title: string
+          tribe_id: string | null
           updated_at: string | null
           user_id: string
         }
@@ -276,8 +302,10 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          squad_id?: string | null
           status?: Database["public"]["Enums"]["opportunity_status"]
           title: string
+          tribe_id?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -285,12 +313,29 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          squad_id?: string | null
           status?: Database["public"]["Enums"]["opportunity_status"]
           title?: string
+          tribe_id?: string | null
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "product_opportunities_squad_id_fkey"
+            columns: ["squad_id"]
+            isOneToOne: false
+            referencedRelation: "squads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_opportunities_tribe_id_fkey"
+            columns: ["tribe_id"]
+            isOneToOne: false
+            referencedRelation: "tribes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -318,6 +363,47 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      squads: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          jira_board_url: string | null
+          name: string
+          tribe_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          jira_board_url?: string | null
+          name: string
+          tribe_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          jira_board_url?: string | null
+          name?: string
+          tribe_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "squads_tribe_id_fkey"
+            columns: ["tribe_id"]
+            isOneToOne: false
+            referencedRelation: "tribes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sync_logs: {
         Row: {
@@ -389,6 +475,33 @@ export type Database = {
           id?: string
           status?: string
           topics?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tribes: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
