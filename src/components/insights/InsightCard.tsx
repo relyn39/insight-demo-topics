@@ -118,13 +118,13 @@ export const InsightCard = ({ insight }: InsightCardProps) => {
     createOpportunityMutation.mutate({
       title: insight.title,
       description: insight.description,
-      tribeId: selectedTribeId,
-      squadId: selectedSquadId,
+      tribeId: selectedTribeId === 'none' ? '' : selectedTribeId,
+      squadId: selectedSquadId === 'none' ? '' : selectedSquadId,
     });
   };
 
   const filteredSquads = squads.filter(squad => 
-    !selectedTribeId || squad.tribe_id === selectedTribeId
+    !selectedTribeId || selectedTribeId === 'none' || squad.tribe_id === selectedTribeId
   );
   
   const Icon = iconMap[insight.type] || Lightbulb;
@@ -231,7 +231,7 @@ export const InsightCard = ({ insight }: InsightCardProps) => {
                     <SelectValue placeholder="Selecione uma tribo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhuma tribo</SelectItem>
+                    <SelectItem value="none">Nenhuma tribo</SelectItem>
                     {tribes.map((tribe) => (
                       <SelectItem key={tribe.id} value={tribe.id}>
                         {tribe.name}
@@ -246,13 +246,13 @@ export const InsightCard = ({ insight }: InsightCardProps) => {
                 <Select 
                   value={selectedSquadId} 
                   onValueChange={setSelectedSquadId}
-                  disabled={!selectedTribeId}
+                  disabled={!selectedTribeId || selectedTribeId === 'none'}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione uma squad" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhuma squad</SelectItem>
+                    <SelectItem value="none">Nenhuma squad</SelectItem>
                     {filteredSquads.map((squad) => (
                       <SelectItem key={squad.id} value={squad.id}>
                         {squad.name}

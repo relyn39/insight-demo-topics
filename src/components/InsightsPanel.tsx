@@ -20,7 +20,9 @@ const getDemoInsights = (): Insight[] => [
     tags: ['performance', 'crítico', 'backend'],
     created_at: new Date().toISOString(),
     user_id: 'demo',
-    status: 'active'
+    status: 'active',
+    tribe_id: '',
+    squad_id: ''
   },
   {
     id: 'demo-2',
@@ -32,7 +34,9 @@ const getDemoInsights = (): Insight[] => [
     tags: ['ux', 'navegação', 'usabilidade'],
     created_at: new Date().toISOString(),
     user_id: 'demo',
-    status: 'active'
+    status: 'active',
+    tribe_id: '',
+    squad_id: ''
   },
   {
     id: 'demo-3',
@@ -44,7 +48,9 @@ const getDemoInsights = (): Insight[] => [
     tags: ['mobile', 'crescimento', 'estratégia'],
     created_at: new Date().toISOString(),
     user_id: 'demo',
-    status: 'active'
+    status: 'active',
+    tribe_id: '',
+    squad_id: ''
   }
 ];
 

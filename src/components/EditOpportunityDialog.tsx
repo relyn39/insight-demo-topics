@@ -56,8 +56,8 @@ export const EditOpportunityDialog = ({ opportunity, open, onOpenChange }: EditO
         title: opportunity.title || '',
         description: opportunity.description || '',
         status: opportunity.status || 'backlog',
-        tribe_id: opportunity.tribe_id || '',
-        squad_id: opportunity.squad_id || '',
+        tribe_id: opportunity.tribe_id || 'none',
+        squad_id: opportunity.squad_id || 'none',
       });
     }
   }, [opportunity]);
@@ -88,8 +88,8 @@ export const EditOpportunityDialog = ({ opportunity, open, onOpenChange }: EditO
       title: formData.title,
       description: formData.description,
       status: formData.status,
-      tribe_id: formData.tribe_id || null,
-      squad_id: formData.squad_id || null,
+      tribe_id: formData.tribe_id === 'none' ? null : formData.tribe_id,
+      squad_id: formData.squad_id === 'none' ? null : formData.squad_id,
     });
   };
 
@@ -124,7 +124,7 @@ export const EditOpportunityDialog = ({ opportunity, open, onOpenChange }: EditO
   };
 
   const filteredSquads = squads.filter(squad => 
-    !formData.tribe_id || squad.tribe_id === formData.tribe_id
+    !formData.tribe_id || formData.tribe_id === 'none' || squad.tribe_id === formData.tribe_id
   );
 
   return (
@@ -177,13 +177,13 @@ export const EditOpportunityDialog = ({ opportunity, open, onOpenChange }: EditO
               <Label htmlFor="tribe">Tribo</Label>
               <Select 
                 value={formData.tribe_id} 
-                onValueChange={(value) => setFormData({ ...formData, tribe_id: value, squad_id: '' })}
+                onValueChange={(value) => setFormData({ ...formData, tribe_id: value, squad_id: 'none' })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione uma tribo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhuma tribo</SelectItem>
+                  <SelectItem value="none">Nenhuma tribo</SelectItem>
                   {tribes.map((tribe) => (
                     <SelectItem key={tribe.id} value={tribe.id}>
                       {tribe.name}
@@ -198,13 +198,13 @@ export const EditOpportunityDialog = ({ opportunity, open, onOpenChange }: EditO
               <Select 
                 value={formData.squad_id} 
                 onValueChange={(value) => setFormData({ ...formData, squad_id: value })}
-                disabled={!formData.tribe_id}
+                disabled={!formData.tribe_id || formData.tribe_id === 'none'}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione uma squad" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhuma squad</SelectItem>
+                  <SelectItem value="none">Nenhuma squad</SelectItem>
                   {filteredSquads.map((squad) => (
                     <SelectItem key={squad.id} value={squad.id}>
                       {squad.name}

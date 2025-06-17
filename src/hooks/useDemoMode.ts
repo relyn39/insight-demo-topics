@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Tables } from '@/integrations/supabase/types';
 
@@ -138,39 +137,48 @@ const DEMO_FEEDBACKS: Feedback[] = [
   }
 ];
 
-const DEMO_INSIGHTS: Insight[] = [
+const getDemoInsights = (): Insight[] => [
   {
-    id: 'insight-1',
-    user_id: 'demo-user',
+    id: 'demo-1',
+    user_id: 'demo',
     type: 'trend',
     severity: 'error',
-    title: 'Aumento de 40% em bugs de pagamento',
-    description: 'Identificamos um padrão crescente de problemas relacionados ao sistema de pagamento nas últimas duas semanas. Isso pode estar impactando significativamente as conversões.',
-    action: 'Priorizar correção do módulo de pagamento e implementar testes automatizados mais robustos.',
-    tags: ['pagamento', 'bugs', 'conversao'],
-    created_at: '2024-01-15T08:00:00Z'
+    title: 'Tendência de queda na satisfação',
+    description: 'Identificamos uma tendência de declínio na satisfação dos usuários nas últimas 2 semanas.',
+    action: 'Investigar causas e implementar melhorias urgentes na experiência do usuário.',
+    tags: ['satisfação', 'tendência', 'urgente'],
+    created_at: new Date().toISOString(),
+    status: 'active',
+    tribe_id: '',
+    squad_id: ''
   },
   {
-    id: 'insight-2',
-    user_id: 'demo-user',
+    id: 'demo-2',
+    user_id: 'demo',
     type: 'opportunity',
     severity: 'success',
-    title: 'Sentimento positivo sobre relatórios',
-    description: 'Os usuários estão muito satisfeitos com a nova funcionalidade de relatórios automatizados, mencionando ganhos significativos de produtividade.',
-    action: 'Considerar expandir as funcionalidades de relatórios com base no feedback positivo.',
-    tags: ['relatorios', 'produtividade', 'satisfacao'],
-    created_at: '2024-01-14T12:00:00Z'
+    title: 'Oportunidade de melhoria na performance',
+    description: 'Usuários reportam lentidão, mas há soluções técnicas viáveis para otimização.',
+    action: 'Implementar cache e otimizar queries do banco de dados.',
+    tags: ['performance', 'otimização', 'técnico'],
+    created_at: new Date().toISOString(),
+    status: 'active',
+    tribe_id: '',
+    squad_id: ''
   },
   {
-    id: 'insight-3',
-    user_id: 'demo-user',
+    id: 'demo-3',
+    user_id: 'demo',
     type: 'other',
     severity: 'info',
-    title: 'Demanda por melhorias na interface',
-    description: 'Vários usuários sugerem melhorias na interface do dashboard, focando em maior destaque para botões principais e cores mais vibrantes.',
-    action: 'Agendar sessão de design para revisar e atualizar a interface do dashboard.',
-    tags: ['ui', 'dashboard', 'design'],
-    created_at: '2024-01-13T15:30:00Z'
+    title: 'Feedback sobre nova funcionalidade',
+    description: 'Usuários estão se adaptando bem à nova interface, com comentários positivos gerais.',
+    action: 'Continuar monitorando e coletar mais feedback para futuras iterações.',
+    tags: ['interface', 'feedback', 'adaptação'],
+    created_at: new Date().toISOString(),
+    status: 'active',
+    tribe_id: '',
+    squad_id: ''
   }
 ];
 
