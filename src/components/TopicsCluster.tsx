@@ -38,7 +38,7 @@ const fetchInsightsAsTopics = async (): Promise<Topic[] | null> => {
     // Convert insights to topic format
     return data.map((insight, index) => ({
         id: index + 1,
-        name: insight.title,
+        name: insight.title || 'Sem título',
         count: Math.floor(Math.random() * 200) + 50, // Simulated count
         sentiment: insight.severity === 'error' ? 'negative' : 
                   insight.severity === 'success' ? 'positive' : 'neutral',
@@ -56,7 +56,7 @@ export const TopicsCluster = () => {
     const convertInsightsToTopics = (insights: any[]): Topic[] => {
         return insights.map((insight, index) => ({
             id: index + 1,
-            name: insight.title,
+            name: insight.title || 'Sem título',
             count: Math.floor(Math.random() * 200) + 50,
             sentiment: insight.severity === 'error' ? 'negative' : 
                       insight.severity === 'success' ? 'positive' : 'neutral',
@@ -166,6 +166,9 @@ export const TopicsCluster = () => {
                     const ChangeIcon = topic.change > 0 ? ArrowUp : topic.change < 0 ? ArrowDown : Minus;
                     const changeColor = topic.change > 0 ? 'text-green-600' : topic.change < 0 ? 'text-red-600' : 'text-muted-foreground';
 
+                    // Ensure count is a valid number before calling toLocaleString
+                    const displayCount = typeof topic.count === 'number' ? topic.count : 0;
+
                     return (
                         <div key={topic.id} className={`p-4 rounded-lg border ${sentimentColors[topic.sentiment as keyof typeof sentimentColors]}`}>
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-3">
@@ -174,16 +177,16 @@ export const TopicsCluster = () => {
                                     <h4 className="font-medium text-card-foreground">{topic.name}</h4>
                                 </div>
                                 <div className="flex items-center space-x-4">
-                                    <span className="text-sm font-medium text-foreground">{topic.count.toLocaleString()} menções</span>
+                                    <span className="text-sm font-medium text-foreground">{displayCount.toLocaleString()} menções</span>
                                     <div className={`flex items-center space-x-1 ${changeColor}`}>
                                         <ChangeIcon className="w-3 h-3" />
-                                        <span className="text-xs font-medium">{Math.abs(topic.change)}%</span>
+                                        <span className="text-xs font-medium">{Math.abs(topic.change || 0)}%</span>
                                     </div>
                                 </div>
                             </div>
                             
                             <div className="flex flex-wrap gap-2 mb-4">
-                                {topic.keywords.map((keyword, index) => (
+                                {(topic.keywords || []).map((keyword, index) => (
                                     <span key={index} className="px-2 py-1 bg-background/60 text-xs text-foreground rounded-md">
                                         {keyword}
                                     </span>
