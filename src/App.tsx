@@ -5,6 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
@@ -31,18 +33,23 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="/feedback-report" element={<FeedbackReport />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/settings/integrations" element={<SettingsIntegrations />} />
-              <Route path="/settings/ai" element={<SettingsAi />} />
-              <Route path="/settings/users" element={<SettingsUsers />} />
-              <Route path="/topics-analysis" element={<TopicsAnalysis />} />
-              <Route path="/update-password" element={<UpdatePasswordPage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <SidebarProvider>
+              <div className="min-h-screen flex w-full">
+                <AppSidebar />
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<AuthPage />} />
+                  <Route path="/feedback-report" element={<FeedbackReport />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/settings/integrations" element={<SettingsIntegrations />} />
+                  <Route path="/settings/ai" element={<SettingsAi />} />
+                  <Route path="/settings/users" element={<SettingsUsers />} />
+                  <Route path="/topics-analysis" element={<TopicsAnalysis />} />
+                  <Route path="/update-password" element={<UpdatePasswordPage />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </div>
+            </SidebarProvider>
           </BrowserRouter>
         </TooltipProvider>
       </ThemeProvider>
