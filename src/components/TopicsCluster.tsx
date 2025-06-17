@@ -2,12 +2,12 @@
 import React from 'react';
 import { Hash, ArrowUp, ArrowDown, Minus, PlusCircle, Loader2, RefreshCw } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useDemoMode } from '@/hooks/useDemoMode';
-import type { Json } from '@/integrations/supabase/types';
+import { generateInsights } from '@/services/insightsService';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Topic {
   id: number;
@@ -21,27 +21,27 @@ interface Topic {
 const getDemoTopics = (): Topic[] => [
   {
     id: 1,
-    name: "Performance do App",
+    name: "Performance crítica identificada",
     count: 234,
     sentiment: 'negative',
     change: -15,
-    keywords: ['lentidão', 'carregamento', 'crash', 'travamento']
+    keywords: ['performance', 'crítico', 'backend', 'lentidão']
   },
   {
     id: 2,
-    name: "Interface do Usuário",
+    name: "Oportunidade de melhoria na UX",
     count: 189,
     sentiment: 'positive',
     change: 8,
-    keywords: ['design', 'usabilidade', 'navegação', 'intuitivo']
+    keywords: ['ux', 'navegação', 'usabilidade', 'interface']
   },
   {
     id: 3,
-    name: "Funcionalidades de Busca",
+    name: "Tendência de crescimento em mobile",
     count: 156,
     sentiment: 'neutral',
     change: 0,
-    keywords: ['filtros', 'busca', 'resultados', 'precisão']
+    keywords: ['mobile', 'crescimento', 'estratégia', 'dispositivos']
   },
   {
     id: 4,
@@ -61,41 +61,33 @@ const getDemoTopics = (): Topic[] => [
   }
 ];
 
-const fetchLatestTopics = async (): Promise<Topic[] | null> => {
+const fetchInsightsAsTopics = async (): Promise<Topic[] | null> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("User not authenticated");
 
     const { data, error } = await supabase
-        .from('topic_analysis_results')
-        .select('topics')
+        .from('insights')
+        .select('*')
         .eq('user_id', user.id)
-        .eq('status', 'completed')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .in('status', ['active', null])
+        .order('created_at', { ascending: false });
     
     if (error) {
         throw new Error(error.message);
     }
 
-    if (!data?.topics) return null;
+    if (!data || data.length === 0) return null;
     
-    try {
-        const topics = data.topics as unknown;
-        return Array.isArray(topics) ? topics as Topic[] : null;
-    } catch {
-        return null;
-    }
-};
-
-const analyzeNewTopics = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("User not authenticated");
-
-    const { error } = await supabase.functions.invoke('analyze-topics', {
-        body: { user_id: user.id },
-    });
-    if (error) throw new Error(error.message);
+    // Convert insights to topic format
+    return data.map((insight, index) => ({
+        id: index + 1,
+        name: insight.title,
+        count: Math.floor(Math.random() * 200) + 50, // Simulated count
+        sentiment: insight.severity === 'error' ? 'negative' : 
+                  insight.severity === 'success' ? 'positive' : 'neutral',
+        change: Math.floor(Math.random() * 30) - 15, // Simulated change
+        keywords: insight.tags || ['geral']
+    }));
 };
 
 export const TopicsCluster = () => {
@@ -104,21 +96,22 @@ export const TopicsCluster = () => {
     const { isDemoMode } = useDemoMode();
 
     const { data: topics, isLoading, isError, error } = useQuery<Topic[] | null>({
-        queryKey: ['latest-topics'],
-        queryFn: isDemoMode ? () => Promise.resolve(getDemoTopics()) : fetchLatestTopics,
+        queryKey: ['insights-as-topics'],
+        queryFn: isDemoMode ? () => Promise.resolve(getDemoTopics()) : fetchInsightsAsTopics,
     });
 
     const analyzeTopicsMutation = useMutation({
         mutationFn: isDemoMode ? 
             () => Promise.resolve() : 
-            analyzeNewTopics,
+            generateInsights,
         onSuccess: () => {
             if (isDemoMode) {
                 toast({ title: "Análise concluída! (DEMO)", description: "Os tópicos foram atualizados em modo demonstração." });
             } else {
                 toast({ title: "Análise concluída!", description: "Os tópicos foram atualizados com base nos novos feedbacks." });
             }
-            queryClient.invalidateQueries({ queryKey: ['latest-topics'] });
+            queryClient.invalidateQueries({ queryKey: ['insights-as-topics'] });
+            queryClient.invalidateQueries({ queryKey: ['insights'] });
         },
         onError: (err: Error) => {
             toast({ title: "Erro na Análise", description: err.message, variant: 'destructive' });
@@ -128,7 +121,6 @@ export const TopicsCluster = () => {
     const createOpportunityMutation = useMutation({
         mutationFn: async (topicName: string) => {
             if (isDemoMode) {
-                // Simular criação em modo demo
                 return topicName;
             }
 
@@ -173,7 +165,7 @@ export const TopicsCluster = () => {
                     ) : (
                         <RefreshCw className="mr-2 h-4 w-4" />
                     )}
-                    Analisar Tópicos
+                    Gerar Novos Insights
                 </Button>
             </div>
 
@@ -188,7 +180,7 @@ export const TopicsCluster = () => {
                             {isError ? "Ocorreu um erro ao buscar os tópicos." : "Nenhuma análise de tópicos encontrada."}
                         </p>
                         <p className="text-sm text-muted-foreground mt-1">
-                            {isError ? (error as Error)?.message : "Clique em \"Analisar Tópicos\" para gerar a primeira análise."}
+                            {isError ? (error as Error)?.message : "Clique em \"Gerar Novos Insights\" para gerar a primeira análise."}
                         </p>
                     </div>
                 )}

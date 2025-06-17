@@ -41,6 +41,7 @@ export const InsightCard = ({ insight }: InsightCardProps) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['insights'] });
+      queryClient.invalidateQueries({ queryKey: ['insights-as-topics'] });
       toast({ title: 'Sucesso!', description: 'As tags foram atualizadas.' });
       setIsEditing(false);
     },
@@ -60,6 +61,7 @@ export const InsightCard = ({ insight }: InsightCardProps) => {
     onSuccess: () => {
       toast({ title: 'Insight rejeitado', description: 'O insight foi removido das sugestões.' });
       queryClient.invalidateQueries({ queryKey: ['insights'] });
+      queryClient.invalidateQueries({ queryKey: ['insights-as-topics'] });
     },
     onError: (err: Error) => {
       toast({ title: 'Erro ao rejeitar insight', description: err.message, variant: 'destructive' });
@@ -100,6 +102,7 @@ export const InsightCard = ({ insight }: InsightCardProps) => {
         toast({ title: "Oportunidade Criada!", description: `"${title}" foi adicionado ao seu roadmap.` });
         queryClient.invalidateQueries({ queryKey: ['product_opportunities'] });
         queryClient.invalidateQueries({ queryKey: ['insights'] });
+        queryClient.invalidateQueries({ queryKey: ['insights-as-topics'] });
         setShowCreateOpportunityDialog(false);
         setSelectedTribeId('');
         setSelectedSquadId('');

@@ -62,7 +62,7 @@ const fetchInsights = async (): Promise<Insight[]> => {
     .from('insights')
     .select('*')
     .eq('user_id', user.id)
-    .in('status', ['active', null]) // Filtrar apenas insights ativos ou sem status
+    .in('status', ['active', null])
     .order('created_at', { ascending: false })
     .limit(10);
 
