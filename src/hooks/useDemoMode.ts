@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Tables } from '@/integrations/supabase/types';
 
@@ -197,7 +198,6 @@ export const useDemoMode = () => {
   };
 
   const getDemoFeedbacks = () => DEMO_FEEDBACKS;
-  const getDemoInsights = () => DEMO_INSIGHTS;
 
   return {
     isDemoMode,
