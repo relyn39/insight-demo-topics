@@ -18,49 +18,6 @@ interface Topic {
   keywords: string[];
 }
 
-const getDemoTopics = (): Topic[] => [
-  {
-    id: 1,
-    name: "Performance crítica identificada",
-    count: 234,
-    sentiment: 'negative',
-    change: -15,
-    keywords: ['performance', 'crítico', 'backend', 'lentidão']
-  },
-  {
-    id: 2,
-    name: "Oportunidade de melhoria na UX",
-    count: 189,
-    sentiment: 'positive',
-    change: 8,
-    keywords: ['ux', 'navegação', 'usabilidade', 'interface']
-  },
-  {
-    id: 3,
-    name: "Tendência de crescimento em mobile",
-    count: 156,
-    sentiment: 'neutral',
-    change: 0,
-    keywords: ['mobile', 'crescimento', 'estratégia', 'dispositivos']
-  },
-  {
-    id: 4,
-    name: "Integração com Terceiros",
-    count: 112,
-    sentiment: 'negative',
-    change: -8,
-    keywords: ['API', 'sincronização', 'conexão', 'falhas']
-  },
-  {
-    id: 5,
-    name: "Suporte ao Cliente",
-    count: 98,
-    sentiment: 'positive',
-    change: 12,
-    keywords: ['atendimento', 'resposta', 'qualidade', 'eficiência']
-  }
-];
-
 const fetchInsightsAsTopics = async (): Promise<Topic[] | null> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("User not authenticated");
@@ -93,11 +50,26 @@ const fetchInsightsAsTopics = async (): Promise<Topic[] | null> => {
 export const TopicsCluster = () => {
     const queryClient = useQueryClient();
     const { toast } = useToast();
-    const { isDemoMode } = useDemoMode();
+    const { isDemoMode, getDemoInsights } = useDemoMode();
+
+    // Convertemos os insights de demo para o formato de tópicos
+    const convertInsightsToTopics = (insights: any[]): Topic[] => {
+        return insights.map((insight, index) => ({
+            id: index + 1,
+            name: insight.title,
+            count: Math.floor(Math.random() * 200) + 50,
+            sentiment: insight.severity === 'error' ? 'negative' : 
+                      insight.severity === 'success' ? 'positive' : 'neutral',
+            change: Math.floor(Math.random() * 30) - 15,
+            keywords: insight.tags || ['geral']
+        }));
+    };
 
     const { data: topics, isLoading, isError, error } = useQuery<Topic[] | null>({
-        queryKey: ['insights-as-topics'],
-        queryFn: isDemoMode ? () => Promise.resolve(getDemoTopics()) : fetchInsightsAsTopics,
+        queryKey: ['insights'],
+        queryFn: isDemoMode ? 
+            () => Promise.resolve(convertInsightsToTopics(getDemoInsights())) : 
+            fetchInsightsAsTopics,
     });
 
     const analyzeTopicsMutation = useMutation({
@@ -110,7 +82,6 @@ export const TopicsCluster = () => {
             } else {
                 toast({ title: "Análise concluída!", description: "Os tópicos foram atualizados com base nos novos feedbacks." });
             }
-            queryClient.invalidateQueries({ queryKey: ['insights-as-topics'] });
             queryClient.invalidateQueries({ queryKey: ['insights'] });
         },
         onError: (err: Error) => {

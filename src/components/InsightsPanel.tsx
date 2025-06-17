@@ -9,51 +9,6 @@ import { InsightCard } from './insights/InsightCard';
 import { Insight } from '@/types/insights';
 import { useDemoMode } from '@/hooks/useDemoMode';
 
-const getDemoInsights = (): Insight[] => [
-  {
-    id: 'demo-1',
-    title: 'Performance crítica identificada',
-    description: 'Usuários relatam lentidão significativa no carregamento das páginas principais.',
-    type: 'alert',
-    severity: 'error',
-    action: 'Investigar problemas de performance e otimizar queries do banco de dados.',
-    tags: ['performance', 'crítico', 'backend'],
-    created_at: new Date().toISOString(),
-    user_id: 'demo',
-    status: 'active',
-    tribe_id: '',
-    squad_id: ''
-  },
-  {
-    id: 'demo-2',
-    title: 'Oportunidade de melhoria na UX',
-    description: 'Feedback positivo sobre nova interface, mas usuários sugerem melhorias no fluxo de navegação.',
-    type: 'opportunity',
-    severity: 'info',
-    action: 'Realizar testes de usabilidade e ajustar navegação baseado no feedback.',
-    tags: ['ux', 'navegação', 'usabilidade'],
-    created_at: new Date().toISOString(),
-    user_id: 'demo',
-    status: 'active',
-    tribe_id: '',
-    squad_id: ''
-  },
-  {
-    id: 'demo-3',
-    title: 'Tendência de crescimento em mobile',
-    description: 'Aumento significativo no uso da plataforma via dispositivos móveis.',
-    type: 'trend',
-    severity: 'success',
-    action: 'Priorizar desenvolvimento mobile-first nas próximas funcionalidades.',
-    tags: ['mobile', 'crescimento', 'estratégia'],
-    created_at: new Date().toISOString(),
-    user_id: 'demo',
-    status: 'active',
-    tribe_id: '',
-    squad_id: ''
-  }
-];
-
 const fetchInsights = async (): Promise<Insight[]> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
@@ -75,7 +30,7 @@ const fetchInsights = async (): Promise<Insight[]> => {
 };
 
 export const InsightsPanel = () => {
-  const { isDemoMode } = useDemoMode();
+  const { isDemoMode, getDemoInsights } = useDemoMode();
   
   const { data: insights = [], isLoading } = useQuery({
     queryKey: ['insights'],
