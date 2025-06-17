@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -39,6 +38,7 @@ const modelOptions = {
     { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
   ],
   google: [
+    { value: 'gemini-2.0-flash-lite', label: 'Gemini 2.0 Flash-Lite (Mais rápido e eficiente)' },
     { value: 'gemini-1.5-pro-latest', label: 'Gemini 1.5 Pro (Mais poderoso)' },
     { value: 'gemini-1.5-flash-latest', label: 'Gemini 1.5 Flash (Rápido e econômico)' },
     { value: 'gemini-1.0-pro', label: 'Gemini 1.0 Pro' },
@@ -115,8 +115,8 @@ export const AiManager = () => {
   const form = useForm<AiConfigFormValues>({
     resolver: zodResolver(aiConfigSchema),
     defaultValues: {
-      provider: 'openai',
-      model: 'gpt-4o-mini',
+      provider: 'google',
+      model: 'gemini-2.0-flash-lite',
       api_key: '',
     },
   });
@@ -172,7 +172,7 @@ export const AiManager = () => {
                       if (value === 'openai') {
                         form.setValue('model', 'gpt-4o-mini', { shouldValidate: true });
                       } else if (value === 'google') {
-                        form.setValue('model', 'gemini-1.5-flash-latest', { shouldValidate: true });
+                        form.setValue('model', 'gemini-2.0-flash-lite', { shouldValidate: true });
                       } else if (value === 'claude') {
                         form.setValue('model', 'claude-3-haiku-20240307', { shouldValidate: true });
                       } else if (value === 'deepseek') {
