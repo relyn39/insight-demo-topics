@@ -35,16 +35,28 @@ const fetchInsightsAsTopics = async (): Promise<Topic[] | null> => {
 
     if (!data || data.length === 0) return null;
     
-    // Convert insights to topic format
-    return data.map((insight, index) => ({
-        id: index + 1,
-        name: insight.title || 'Sem título',
-        count: Math.floor(Math.random() * 200) + 50, // Simulated count
-        sentiment: insight.severity === 'error' ? 'negative' : 
-                  insight.severity === 'success' ? 'positive' : 'neutral',
-        change: Math.floor(Math.random() * 30) - 15, // Simulated change
-        keywords: insight.tags || ['geral']
-    }));
+    // Convert insights to topic format with consistent data
+    return data.map((insight, index) => {
+        // Create a consistent count based on insight type and severity
+        let baseCount = 50;
+        if (insight.severity === 'error') baseCount = 120;
+        else if (insight.severity === 'warning') baseCount = 80;
+        else if (insight.severity === 'success') baseCount = 95;
+        
+        // Create consistent keywords from tags
+        const keywords = insight.tags?.slice(0, 4) || ['geral'];
+        
+        return {
+            id: index + 1,
+            name: insight.title || 'Sem título',
+            count: baseCount + (index * 15), // Consistent count calculation
+            sentiment: insight.severity === 'error' ? 'negative' : 
+                      insight.severity === 'success' ? 'positive' : 'neutral',
+            change: insight.severity === 'error' ? -8 : 
+                   insight.severity === 'success' ? 12 : 3, // Consistent change
+            keywords: keywords
+        };
+    });
 };
 
 export const TopicsCluster = () => {
@@ -52,23 +64,35 @@ export const TopicsCluster = () => {
     const { toast } = useToast();
     const { isDemoMode, getDemoInsights } = useDemoMode();
 
-    // Convertemos os insights de demo para o formato de tópicos
-    const convertInsightsToTopics = (insights: any[]): Topic[] => {
-        return insights.map((insight, index) => ({
-            id: index + 1,
-            name: insight.title || 'Sem título',
-            count: Math.floor(Math.random() * 200) + 50,
-            sentiment: insight.severity === 'error' ? 'negative' : 
-                      insight.severity === 'success' ? 'positive' : 'neutral',
-            change: Math.floor(Math.random() * 30) - 15,
-            keywords: insight.tags || ['geral']
-        }));
+    // Convert demo insights to topics with consistent data
+    const convertDemoInsightsToTopics = (insights: any[]): Topic[] => {
+        return insights.map((insight, index) => {
+            // Create consistent count based on insight type and severity
+            let baseCount = 50;
+            if (insight.severity === 'error') baseCount = 120;
+            else if (insight.severity === 'warning') baseCount = 80;
+            else if (insight.severity === 'success') baseCount = 95;
+            
+            // Create consistent keywords from tags
+            const keywords = insight.tags?.slice(0, 4) || ['geral'];
+            
+            return {
+                id: index + 1,
+                name: insight.title || 'Sem título',
+                count: baseCount + (index * 15),
+                sentiment: insight.severity === 'error' ? 'negative' : 
+                          insight.severity === 'success' ? 'positive' : 'neutral',
+                change: insight.severity === 'error' ? -8 : 
+                       insight.severity === 'success' ? 12 : 3,
+                keywords: keywords
+            };
+        });
     };
 
     const { data: topics, isLoading, isError, error } = useQuery<Topic[] | null>({
         queryKey: ['insights'],
         queryFn: isDemoMode ? 
-            () => Promise.resolve(convertInsightsToTopics(getDemoInsights())) : 
+            () => Promise.resolve(convertDemoInsightsToTopics(getDemoInsights())) : 
             fetchInsightsAsTopics,
     });
 

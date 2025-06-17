@@ -138,16 +138,16 @@ const DEMO_FEEDBACKS: Feedback[] = [
   }
 ];
 
-// Insights de demonstração sincronizados com os tópicos
+// Insights de demonstração com dados completos para tópicos
 const getDemoInsights = (): Insight[] => [
   {
-    id: 'demo-1',
-    title: 'Performance crítica identificada',
-    description: 'Usuários relatam lentidão significativa no carregamento das páginas principais.',
+    id: 'demo-insight-1',
+    title: 'Problemas de Performance Críticos',
+    description: 'Usuários relatam lentidão significativa no carregamento das páginas principais e travamentos em dispositivos móveis.',
     type: 'alert',
     severity: 'error',
     action: 'Investigar problemas de performance e otimizar queries do banco de dados.',
-    tags: ['performance', 'crítico', 'backend'],
+    tags: ['performance', 'mobile', 'crítico'],
     created_at: new Date().toISOString(),
     user_id: 'demo',
     status: 'active',
@@ -155,41 +155,13 @@ const getDemoInsights = (): Insight[] => [
     squad_id: ''
   },
   {
-    id: 'demo-2',
-    title: 'Oportunidade de melhoria na UX',
-    description: 'Feedback positivo sobre nova interface, mas usuários sugerem melhorias no fluxo de navegação.',
-    type: 'opportunity',
-    severity: 'info',
-    action: 'Realizar testes de usabilidade e ajustar navegação baseado no feedback.',
-    tags: ['ux', 'navegação', 'usabilidade'],
-    created_at: new Date().toISOString(),
-    user_id: 'demo',
-    status: 'active',
-    tribe_id: '',
-    squad_id: ''
-  },
-  {
-    id: 'demo-3',
-    title: 'Tendência de crescimento em mobile',
-    description: 'Aumento significativo no uso da plataforma via dispositivos móveis.',
-    type: 'trend',
-    severity: 'success',
-    action: 'Priorizar desenvolvimento mobile-first nas próximas funcionalidades.',
-    tags: ['mobile', 'crescimento', 'estratégia'],
-    created_at: new Date().toISOString(),
-    user_id: 'demo',
-    status: 'active',
-    tribe_id: '',
-    squad_id: ''
-  },
-  {
-    id: 'demo-4',
-    title: 'Bugs críticos no sistema de pagamento',
-    description: 'Identificamos múltiplos relatos de falhas no processo de checkout.',
+    id: 'demo-insight-2',
+    title: 'Bugs no Sistema de Pagamento',
+    description: 'Identificamos múltiplos relatos de falhas no processo de checkout que estão impactando as conversões.',
     type: 'alert',
     severity: 'error',
     action: 'Revisar e corrigir sistema de pagamento urgentemente.',
-    tags: ['pagamento', 'bug', 'crítico'],
+    tags: ['pagamento', 'bug', 'checkout'],
     created_at: new Date().toISOString(),
     user_id: 'demo',
     status: 'active',
@@ -197,12 +169,40 @@ const getDemoInsights = (): Insight[] => [
     squad_id: ''
   },
   {
-    id: 'demo-5',
-    title: 'Integração com terceiros instável',
-    description: 'Problemas recorrentes nas integrações com Slack e outras ferramentas.',
+    id: 'demo-insight-3',
+    title: 'Melhorias na Interface do Dashboard',
+    description: 'Feedback positivo sobre nova interface, mas usuários sugerem melhorias no destaque dos botões e cores.',
+    type: 'opportunity',
+    severity: 'info',
+    action: 'Realizar testes de usabilidade e ajustar design baseado no feedback.',
+    tags: ['ui', 'dashboard', 'usabilidade'],
+    created_at: new Date().toISOString(),
+    user_id: 'demo',
+    status: 'active',
+    tribe_id: '',
+    squad_id: ''
+  },
+  {
+    id: 'demo-insight-4',
+    title: 'Sucesso dos Relatórios Automatizados',
+    description: 'Usuários muito satisfeitos com a funcionalidade de relatórios, mencionando ganhos de produtividade.',
+    type: 'trend',
+    severity: 'success',
+    action: 'Considerar expandir funcionalidades de relatórios com base no feedback positivo.',
+    tags: ['relatórios', 'automação', 'produtividade'],
+    created_at: new Date().toISOString(),
+    user_id: 'demo',
+    status: 'active',
+    tribe_id: '',
+    squad_id: ''
+  },
+  {
+    id: 'demo-insight-5',
+    title: 'Problemas de Integração com Terceiros',
+    description: 'Falhas recorrentes nas integrações com Slack e outras ferramentas estão afetando a experiência.',
     type: 'alert',
     severity: 'warning',
-    action: 'Implementar retry automático e melhorar tratamento de erros.',
+    action: 'Implementar retry automático e melhorar tratamento de erros nas integrações.',
     tags: ['integração', 'slack', 'estabilidade'],
     created_at: new Date().toISOString(),
     user_id: 'demo',
