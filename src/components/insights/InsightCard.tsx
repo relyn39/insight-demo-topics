@@ -3,15 +3,13 @@ import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useTribes } from '@/hooks/useTribes';
+import { useDemoMode } from '@/hooks/useDemoMode';
 import { Insight } from '@/types/insights';
 import { EditInsightTags } from './EditInsightTags';
+import { CreateOpportunityDialog } from './CreateOpportunityDialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Loader2, PlusCircle, Pencil, TrendingUp, AlertCircle, Target, Lightbulb, X, Users } from 'lucide-react';
+import { Pencil, TrendingUp, AlertCircle, Target, Lightbulb, X, PlusCircle } from 'lucide-react';
 
 const iconMap = {
   trend: TrendingUp,
@@ -27,14 +25,14 @@ interface InsightCardProps {
 export const InsightCard = ({ insight }: InsightCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [showCreateOpportunityDialog, setShowCreateOpportunityDialog] = useState(false);
-  const [selectedTribeId, setSelectedTribeId] = useState('');
-  const [selectedSquadId, setSelectedSquadId] = useState('');
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { tribes, squads } = useTribes();
+  const { isDemoMode } = useDemoMode();
 
   const updateInsightMutation = useMutation({
     mutationFn: async ({ insightId, tags }: { insightId: string; tags: string[] }) => {
+      if (isDemoMode) return;
+      
       const { data, error } = await supabase.from('insights').update({ tags }).eq('id', insightId).select();
       if (error) throw error;
       return data;
@@ -52,6 +50,8 @@ export const InsightCard = ({ insight }: InsightCardProps) => {
 
   const rejectInsightMutation = useMutation({
     mutationFn: async (insightId: string) => {
+      if (isDemoMode) return;
+      
       const { error } = await supabase
         .from('insights')
         .update({ status: 'rejected' })
@@ -68,68 +68,19 @@ export const InsightCard = ({ insight }: InsightCardProps) => {
     },
   });
 
-  const createOpportunityMutation = useMutation({
-    mutationFn: async ({ title, description, tribeId, squadId }: { 
-      title: string; 
-      description: string | null;
-      tribeId?: string;
-      squadId?: string;
-    }) => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error("Usuário não autenticado.");
-        
-        // Criar oportunidade
-        const { error: opportunityError } = await supabase.from('product_opportunities').insert({
-          title: title,
-          description: description,
-          user_id: user.id,
-          status: 'backlog',
-          tribe_id: tribeId || null,
-          squad_id: squadId || null,
-        });
-        if (opportunityError) throw opportunityError;
-
-        // Marcar insight como convertido
-        const { error: insightError } = await supabase
-          .from('insights')
-          .update({ status: 'converted' })
-          .eq('id', insight.id);
-        if (insightError) throw insightError;
-        
-        return title;
-    },
-    onSuccess: (title) => {
-        toast({ title: "Oportunidade Criada!", description: `"${title}" foi adicionado ao seu roadmap.` });
-        queryClient.invalidateQueries({ queryKey: ['product_opportunities'] });
-        queryClient.invalidateQueries({ queryKey: ['insights'] });
-        queryClient.invalidateQueries({ queryKey: ['insights-as-topics'] });
-        setShowCreateOpportunityDialog(false);
-        setSelectedTribeId('');
-        setSelectedSquadId('');
-    },
-    onError: (err: Error) => {
-        toast({ title: "Erro ao criar oportunidade", description: err.message, variant: 'destructive' });
-    },
-  });
-
   const handleSaveTags = (tagInputValue: string) => {
     const tags = tagInputValue.split(',').map((t) => t.trim()).filter(Boolean);
     updateInsightMutation.mutate({ insightId: insight.id, tags });
   };
 
-  const handleCreateOpportunity = () => {
-    createOpportunityMutation.mutate({
-      title: insight.title,
-      description: insight.description,
-      tribeId: selectedTribeId === 'none' ? '' : selectedTribeId,
-      squadId: selectedSquadId === 'none' ? '' : selectedSquadId,
-    });
+  const handleReject = () => {
+    if (isDemoMode) {
+      toast({ title: 'Insight rejeitado (DEMO)', description: 'O insight foi removido em modo demonstração.' });
+      return;
+    }
+    rejectInsightMutation.mutate(insight.id);
   };
 
-  const filteredSquads = squads.filter(squad => 
-    !selectedTribeId || selectedTribeId === 'none' || squad.tribe_id === selectedTribeId
-  );
-  
   const Icon = iconMap[insight.type] || Lightbulb;
   const severityColors = {
     info: 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-300',
@@ -153,7 +104,7 @@ export const InsightCard = ({ insight }: InsightCardProps) => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => rejectInsightMutation.mutate(insight.id)}
+            onClick={handleReject}
             disabled={rejectInsightMutation.isPending}
             className="text-red-600 hover:text-red-700 hover:bg-red-50"
           >
@@ -199,7 +150,6 @@ export const InsightCard = ({ insight }: InsightCardProps) => {
               variant="outline"
               size="sm"
               onClick={() => setShowCreateOpportunityDialog(true)}
-              disabled={createOpportunityMutation.isPending}
               className="ml-auto"
           >
               <PlusCircle className="mr-2 h-4 w-4" />
@@ -208,80 +158,15 @@ export const InsightCard = ({ insight }: InsightCardProps) => {
         </div>
       </div>
 
-      <Dialog open={showCreateOpportunityDialog} onOpenChange={setShowCreateOpportunityDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <Users className="mr-2 h-5 w-5" />
-              Criar Oportunidade
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <Label>Título</Label>
-              <p className="text-sm text-muted-foreground mt-1">{insight.title}</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="tribe-select">Tribo (opcional)</Label>
-                <Select value={selectedTribeId} onValueChange={(value) => {
-                  setSelectedTribeId(value);
-                  setSelectedSquadId(''); // Reset squad when tribe changes
-                }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma tribo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Nenhuma tribo</SelectItem>
-                    {tribes.map((tribe) => (
-                      <SelectItem key={tribe.id} value={tribe.id}>
-                        {tribe.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="squad-select">Squad (opcional)</Label>
-                <Select 
-                  value={selectedSquadId} 
-                  onValueChange={setSelectedSquadId}
-                  disabled={!selectedTribeId || selectedTribeId === 'none'}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma squad" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Nenhuma squad</SelectItem>
-                    {filteredSquads.map((squad) => (
-                      <SelectItem key={squad.id} value={squad.id}>
-                        {squad.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setShowCreateOpportunityDialog(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleCreateOpportunity} disabled={createOpportunityMutation.isPending}>
-                {createOpportunityMutation.isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                )}
-                Criar Oportunidade
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {!isDemoMode && (
+        <CreateOpportunityDialog
+          open={showCreateOpportunityDialog}
+          onOpenChange={setShowCreateOpportunityDialog}
+          insightTitle={insight.title}
+          insightDescription={insight.description}
+          insightId={insight.id}
+        />
+      )}
     </>
   );
 };

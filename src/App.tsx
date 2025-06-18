@@ -31,21 +31,20 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <BrowserRouter>
-            <div className="min-h-screen w-full">
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<AuthPage />} />
-                <Route path="/feedback" element={<Navigate to="/feedback-report" replace />} />
-                <Route path="/feedback-report" element={<FeedbackReport />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/settings/integrations" element={<SettingsIntegrations />} />
-                <Route path="/settings/ai" element={<SettingsAi />} />
-                <Route path="/settings/users" element={<SettingsUsers />} />
-                <Route path="/topics-analysis" element={<TopicsAnalysis />} />
-                <Route path="/update-password" element={<UpdatePasswordPage />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </div>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/feedback" element={<Navigate to="/feedback-report" replace />} />
+              <Route path="/feedback/:source" element={<FeedbackReport />} />
+              <Route path="/feedback-report" element={<FeedbackReport />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/settings/integrations" element={<SettingsIntegrations />} />
+              <Route path="/settings/ai" element={<SettingsAi />} />
+              <Route path="/settings/users" element={<SettingsUsers />} />
+              <Route path="/topics-analysis" element={<TopicsAnalysis />} />
+              <Route path="/update-password" element={<UpdatePasswordPage />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
           </BrowserRouter>
         </TooltipProvider>
       </ThemeProvider>
