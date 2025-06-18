@@ -29,7 +29,14 @@ const fetchLatestItems = async (): Promise<LatestItem[]> => {
     throw new Error('Não foi possível carregar os últimos itens.');
   }
 
-  return data || [];
+  return (data || []).map(item => ({
+    id: item.id,
+    title: item.title,
+    count: item.count,
+    sentiment: item.sentiment as 'positive' | 'negative' | 'neutral',
+    change_percentage: item.change_percentage,
+    keywords: item.keywords || []
+  }));
 };
 
 const generateLatestItemsFunction = async () => {
