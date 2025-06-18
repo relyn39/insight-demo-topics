@@ -16,6 +16,10 @@ export const LatestItems = () => {
     neutral: 'bg-gray-50 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700'
   };
 
+  const handleGenerateItems = () => {
+    generateLatestItems();
+  };
+
   return (
     <div className="bg-card rounded-xl p-6 shadow-sm border">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
@@ -26,7 +30,7 @@ export const LatestItems = () => {
           <p className="text-sm text-muted-foreground">Itens mais mencionados nos feedbacks recentes</p>
         </div>
         <Button 
-          onClick={generateLatestItems}
+          onClick={handleGenerateItems}
           disabled={isGenerating}
         >
           {isGenerating ? (
