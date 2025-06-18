@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { MetricsOverview } from './MetricsOverview';
 import { SentimentAnalysis } from './SentimentAnalysis';
-import { TopicsCluster } from './TopicsCluster';
+import { LatestItems } from './LatestItems';
 import { NaturalLanguageQuery } from './NaturalLanguageQuery';
 import { InsightsPanel } from './InsightsPanel';
 import { TrendChart } from './TrendChart';
@@ -89,7 +89,7 @@ export const FeedbackDashboard = () => {
         <SentimentAnalysis />
       </div>
 
-      <TopicsCluster />
+      <LatestItems />
     </div>
   );
 };

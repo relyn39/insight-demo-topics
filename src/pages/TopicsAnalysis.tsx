@@ -2,27 +2,79 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowLeft, Lightbulb } from 'lucide-react';
+import { InsightList } from '@/components/insights/InsightList';
+import { GenerateInsightsButton } from '@/components/insights/GenerateInsightsButton';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useDemoMode } from '@/hooks/useDemoMode';
+import { Badge } from '@/components/ui/badge';
+
+const fetchInsights = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from('insights')
+    .select('*')
+    .eq('user_id', user.id)
+    .in('status', ['active', null])
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data || [];
+};
 
 const TopicsAnalysis = () => {
+  const { isDemoMode, getDemoInsights } = useDemoMode();
+  
+  const { data: insights, isLoading, error } = useQuery({
+    queryKey: ['insights'],
+    queryFn: isDemoMode ? () => Promise.resolve(getDemoInsights()) : fetchInsights,
+  });
+
+  const activeInsights = insights?.filter(insight => 
+    !insight.status || insight.status === 'active'
+  ) || [];
+
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-4 bg-background -mx-6 -mt-6 mb-6 sm:px-6">
-        <h1 className="text-xl font-bold text-gray-900">Análise de Tópicos</h1>
-        <Button variant="outline" asChild>
+        <div className="flex items-center gap-2">
+          <h1 className="text-xl font-bold text-gray-900">
+            Insights {isDemoMode && <Badge variant="secondary">DEMO</Badge>}
+          </h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <GenerateInsightsButton />
+          <Button variant="outline" asChild>
             <Link to="/">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Voltar ao Dashboard
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar ao Dashboard
             </Link>
-        </Button>
+          </Button>
+        </div>
       </header>
-      <p className="text-gray-600">
-        Análise detalhada dos tópicos e clusters identificados a partir dos feedbacks dos seus usuários.
-      </p>
-      <div className="mt-8 rounded-lg border border-dashed border-gray-300 p-12 text-center">
-        <p className="text-center text-gray-500 font-medium">Página em construção.</p>
-        <p className="text-sm text-gray-400 mt-2">Em breve, você poderá ver detalhes aprofundados sobre cada tópico aqui.</p>
-      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Lightbulb className="w-5 h-5" />
+            Todos os Insights
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <InsightList 
+            insights={activeInsights} 
+            isLoading={isLoading} 
+            error={error} 
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 };

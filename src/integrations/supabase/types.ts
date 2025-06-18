@@ -256,6 +256,42 @@ export type Database = {
         }
         Relationships: []
       }
+      latest_items: {
+        Row: {
+          change_percentage: number
+          count: number
+          created_at: string
+          id: string
+          keywords: string[] | null
+          sentiment: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          change_percentage?: number
+          count?: number
+          created_at?: string
+          id?: string
+          keywords?: string[] | null
+          sentiment?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          change_percentage?: number
+          count?: number
+          created_at?: string
+          id?: string
+          keywords?: string[] | null
+          sentiment?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       opportunity_insights: {
         Row: {
           insight_id: string

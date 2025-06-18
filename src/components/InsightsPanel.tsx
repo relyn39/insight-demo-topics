@@ -6,6 +6,7 @@ import { Lightbulb, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { InsightCard } from './insights/InsightCard';
+import { GenerateInsightsButton } from './insights/GenerateInsightsButton';
 import { Insight } from '@/types/insights';
 import { useDemoMode } from '@/hooks/useDemoMode';
 
@@ -44,10 +45,13 @@ export const InsightsPanel = () => {
   return (
     <Card className="h-fit">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Lightbulb className="w-5 h-5" />
-          Insights Recentes {isDemoMode && <Badge variant="secondary">DEMO</Badge>}
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Lightbulb className="w-5 h-5" />
+            Insights Recentes {isDemoMode && <Badge variant="secondary">DEMO</Badge>}
+          </CardTitle>
+          <GenerateInsightsButton />
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (

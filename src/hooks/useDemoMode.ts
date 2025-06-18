@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Tables } from '@/integrations/supabase/types';
 
@@ -138,7 +137,6 @@ const DEMO_FEEDBACKS: Feedback[] = [
   }
 ];
 
-// Insights de demonstração com dados completos para tópicos
 const getDemoInsights = (): Insight[] => [
   {
     id: 'demo-insight-1',
