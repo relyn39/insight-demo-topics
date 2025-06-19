@@ -5,8 +5,6 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { Separator } from '@/components/ui/separator';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { FeedbackDashboard } from '@/components/FeedbackDashboard';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import Roadmap from '@/components/Roadmap';
 
 const Index = () => {
   return (
@@ -26,18 +24,7 @@ const Index = () => {
           </header>
           
           <main className="flex-1 p-4 md:p-6">
-            <Tabs defaultValue="dashboard" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 sm:w-[300px] mb-6">
-                <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-                <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
-              </TabsList>
-              <TabsContent value="dashboard">
-                <FeedbackDashboard />
-              </TabsContent>
-              <TabsContent value="roadmap">
-                <Roadmap />
-              </TabsContent>
-            </Tabs>
+            <FeedbackDashboard />
           </main>
         </SidebarInset>
       </div>

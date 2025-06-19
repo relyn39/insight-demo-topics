@@ -54,51 +54,6 @@ const generateLatestItemsFunction = async () => {
   return data;
 };
 
-// Função para atualizar latest_items quando feedback manual/importado é adicionado
-const updateLatestItemsFromFeedback = async (feedbackData: any) => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-
-  // Verificar se é feedback manual ou importado
-  if (feedbackData.source === 'manual' || feedbackData.source === 'zapier') {
-    try {
-      // Buscar itens existentes para atualizar contagem
-      const { data: existingItems } = await supabase
-        .from('latest_items')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('title', feedbackData.title);
-
-      if (existingItems && existingItems.length > 0) {
-        // Atualizar item existente
-        const existingItem = existingItems[0];
-        await supabase
-          .from('latest_items')
-          .update({
-            count: existingItem.count + 1,
-            updated_at: new Date().toISOString(),
-            change_percentage: Math.floor(Math.random() * 20) - 10 // Simular mudança
-          })
-          .eq('id', existingItem.id);
-      } else {
-        // Criar novo item
-        await supabase
-          .from('latest_items')
-          .insert({
-            user_id: user.id,
-            title: feedbackData.title,
-            count: 1,
-            sentiment: feedbackData.analysis?.sentiment || 'neutral',
-            change_percentage: Math.floor(Math.random() * 20) - 10,
-            keywords: feedbackData.tags || []
-          });
-      }
-    } catch (error) {
-      console.error('Erro ao atualizar latest_items:', error);
-    }
-  }
-};
-
 export const useLatestItems = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -131,6 +86,5 @@ export const useLatestItems = () => {
     error,
     generateLatestItems: generateLatestItemsMutation.mutate,
     isGenerating: generateLatestItemsMutation.isPending,
-    updateLatestItemsFromFeedback,
   };
 };

@@ -38,40 +38,56 @@ export const CreateOpportunityDialog = ({
       tribeId?: string;
       squadId?: string;
     }) => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error("Usuário não autenticado.");
-        
-        // Criar oportunidade
-        const { error: opportunityError } = await supabase.from('product_opportunities').insert({
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado.");
+      
+      // Criar oportunidade
+      const { data: opportunity, error: opportunityError } = await supabase
+        .from('product_opportunities')
+        .insert({
           title: title,
           description: description,
           user_id: user.id,
           status: 'backlog',
           tribe_id: tribeId || null,
           squad_id: squadId || null,
-        });
-        if (opportunityError) throw opportunityError;
+        })
+        .select()
+        .single();
 
-        // Marcar insight como convertido
-        const { error: insightError } = await supabase
-          .from('insights')
-          .update({ status: 'converted' })
-          .eq('id', insightId);
-        if (insightError) throw insightError;
+      if (opportunityError) throw opportunityError;
+
+      // Vincular insight à oportunidade
+      const { error: linkError } = await supabase
+        .from('opportunity_insights')
+        .insert({
+          opportunity_id: opportunity.id,
+          insight_id: insightId
+        });
+
+      if (linkError) throw linkError;
+
+      // Marcar insight como convertido
+      const { error: insightError } = await supabase
+        .from('insights')
+        .update({ status: 'converted' })
+        .eq('id', insightId);
+
+      if (insightError) throw insightError;
         
-        return title;
+      return title;
     },
     onSuccess: (title) => {
-        toast({ title: "Oportunidade Criada!", description: `"${title}" foi adicionado ao seu roadmap.` });
-        queryClient.invalidateQueries({ queryKey: ['product_opportunities'] });
-        queryClient.invalidateQueries({ queryKey: ['insights'] });
-        queryClient.invalidateQueries({ queryKey: ['insights-as-topics'] });
-        onOpenChange(false);
-        setSelectedTribeId('');
-        setSelectedSquadId('');
+      toast({ title: "Oportunidade Criada!", description: `"${title}" foi adicionado ao seu roadmap.` });
+      queryClient.invalidateQueries({ queryKey: ['product_opportunities'] });
+      queryClient.invalidateQueries({ queryKey: ['insights'] });
+      queryClient.invalidateQueries({ queryKey: ['insights-as-topics'] });
+      onOpenChange(false);
+      setSelectedTribeId('');
+      setSelectedSquadId('');
     },
     onError: (err: Error) => {
-        toast({ title: "Erro ao criar oportunidade", description: err.message, variant: 'destructive' });
+      toast({ title: "Erro ao criar oportunidade", description: err.message, variant: 'destructive' });
     },
   });
 
@@ -109,7 +125,7 @@ export const CreateOpportunityDialog = ({
               <Label htmlFor="tribe-select">Tribo (opcional)</Label>
               <Select value={selectedTribeId} onValueChange={(value) => {
                 setSelectedTribeId(value);
-                setSelectedSquadId(''); // Reset squad when tribe changes
+                setSelectedSquadId('');
               }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione uma tribo" />

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Edit } from 'lucide-react';
+import { Loader2, Edit, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +22,22 @@ interface ProductOpportunity {
   squad_id?: string;
   tribe?: { name: string };
   squad?: { name: string };
+  opportunity_insights?: Array<{
+    insight_id: string;
+    insights: {
+      id: string;
+      title: string;
+      insight_feedbacks: Array<{
+        feedback_id: string;
+        feedbacks: {
+          id: string;
+          title: string;
+          source: string;
+          customer_name?: string;
+        };
+      }>;
+    };
+  }>;
 }
 
 const statusTranslations: Record<OpportunityStatus, string> = {
@@ -37,7 +53,23 @@ const fetchOpportunities = async (): Promise<ProductOpportunity[]> => {
     .select(`
       *,
       tribe:tribes(name),
-      squad:squads(name)
+      squad:squads(name),
+      opportunity_insights(
+        insight_id,
+        insights(
+          id,
+          title,
+          insight_feedbacks(
+            feedback_id,
+            feedbacks(
+              id,
+              title,
+              source,
+              customer_name
+            )
+          )
+        )
+      )
     `)
     .order('created_at', { ascending: false });
   
@@ -51,6 +83,7 @@ const fetchOpportunities = async (): Promise<ProductOpportunity[]> => {
 const Roadmap = () => {
   const { tribes, squads } = useTribes();
   const [editingOpportunity, setEditingOpportunity] = useState<ProductOpportunity | null>(null);
+  const [showingSources, setShowingSources] = useState<string | null>(null);
   
   const { data: opportunities, isLoading, error } = useQuery<ProductOpportunity[]>({
     queryKey: ['product_opportunities'],
@@ -59,6 +92,10 @@ const Roadmap = () => {
 
   const handleEditOpportunity = (opportunity: ProductOpportunity) => {
     setEditingOpportunity(opportunity);
+  };
+
+  const toggleSources = (opportunityId: string) => {
+    setShowingSources(showingSources === opportunityId ? null : opportunityId);
   };
 
   return (
@@ -108,6 +145,18 @@ const Roadmap = () => {
                                 </Badge>
                               )}
                             </div>
+
+                            {opp.opportunity_insights && opp.opportunity_insights.length > 0 && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleSources(opp.id)}
+                                className="text-xs mt-2 p-0 h-auto"
+                              >
+                                <FileText className="mr-1 h-3 w-3" />
+                                Ver Fontes ({opp.opportunity_insights.length})
+                              </Button>
+                            )}
                           </div>
                           
                           <Button
@@ -119,6 +168,31 @@ const Roadmap = () => {
                             <Edit className="h-3 w-3" />
                           </Button>
                         </div>
+
+                        {showingSources === opp.id && opp.opportunity_insights && (
+                          <div className="mt-3 pt-3 border-t border-border">
+                            <h5 className="text-xs font-medium mb-2">Insights e Feedbacks:</h5>
+                            <div className="space-y-2">
+                              {opp.opportunity_insights.map((oppInsight) => (
+                                <div key={oppInsight.insight_id} className="text-xs border-l-2 border-blue-200 pl-2">
+                                  <div className="font-medium text-blue-800 dark:text-blue-300">
+                                    • {oppInsight.insights.title}
+                                  </div>
+                                  <div className="ml-2 space-y-1">
+                                    {oppInsight.insights.insight_feedbacks?.map((insightFeedback) => (
+                                      <div key={insightFeedback.feedback_id} className="text-muted-foreground">
+                                        - {insightFeedback.feedbacks.title} ({insightFeedback.feedbacks.source})
+                                        {insightFeedback.feedbacks.customer_name && 
+                                          ` - ${insightFeedback.feedbacks.customer_name}`
+                                        }
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   ))}

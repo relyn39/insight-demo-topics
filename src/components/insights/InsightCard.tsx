@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useDemoMode } from '@/hooks/useDemoMode';
@@ -9,7 +9,7 @@ import { EditInsightTags } from './EditInsightTags';
 import { CreateOpportunityDialog } from './CreateOpportunityDialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, TrendingUp, AlertCircle, Target, Lightbulb, X, PlusCircle } from 'lucide-react';
+import { Pencil, TrendingUp, AlertCircle, Target, Lightbulb, X, PlusCircle, FileText } from 'lucide-react';
 
 const iconMap = {
   trend: TrendingUp,
@@ -18,16 +18,56 @@ const iconMap = {
   other: Lightbulb,
 };
 
+const typeTranslations = {
+  trend: 'Tendência',
+  alert: 'Alerta',
+  opportunity: 'Oportunidade',
+  other: 'Outro',
+};
+
+const severityTranslations = {
+  info: 'Informação',
+  warning: 'Aviso',
+  success: 'Sucesso',
+  error: 'Erro',
+};
+
 interface InsightCardProps {
   insight: Insight;
 }
 
+const fetchInsightSources = async (insightId: string) => {
+  const { data, error } = await supabase
+    .from('insight_feedbacks')
+    .select(`
+      feedback_id,
+      feedbacks (
+        id,
+        title,
+        source,
+        created_at,
+        customer_name
+      )
+    `)
+    .eq('insight_id', insightId);
+
+  if (error) throw error;
+  return data || [];
+};
+
 export const InsightCard = ({ insight }: InsightCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [showCreateOpportunityDialog, setShowCreateOpportunityDialog] = useState(false);
+  const [showSources, setShowSources] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { isDemoMode } = useDemoMode();
+
+  const { data: sources = [] } = useQuery({
+    queryKey: ['insight-sources', insight.id],
+    queryFn: () => fetchInsightSources(insight.id),
+    enabled: showSources && !isDemoMode,
+  });
 
   const updateInsightMutation = useMutation({
     mutationFn: async ({ insightId, tags }: { insightId: string; tags: string[] }) => {
@@ -96,8 +136,22 @@ export const InsightCard = ({ insight }: InsightCardProps) => {
           <div className="flex items-start space-x-3 flex-1">
             <Icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
             <div className="flex-1">
-              <h4 className="font-medium text-sm mb-1">{insight.title}</h4>
+              <div className="flex items-center gap-2 mb-1">
+                <h4 className="font-medium text-sm">{insight.title}</h4>
+                <Badge variant="outline" className="text-xs">
+                  {typeTranslations[insight.type]}
+                </Badge>
+                <Badge variant="secondary" className="text-xs">
+                  {severityTranslations[insight.severity]}
+                </Badge>
+              </div>
               <p className="text-sm opacity-90 mb-2">{insight.description}</p>
+              
+              {insight.created_at && (
+                <p className="text-xs text-muted-foreground mb-2">
+                  Gerado em: {new Date(insight.created_at).toLocaleDateString('pt-BR')}
+                </p>
+              )}
             </div>
           </div>
           
@@ -143,30 +197,54 @@ export const InsightCard = ({ insight }: InsightCardProps) => {
         )}
 
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-black/5 dark:border-white/10">
-          {insight.action && (
-              <span className="text-xs text-muted-foreground italic max-w-[50%]">{insight.action}</span>
-          )}
+          <div className="flex items-center gap-2">
+            {insight.action && (
+              <span className="text-xs text-muted-foreground italic">{insight.action}</span>
+            )}
+            {!isDemoMode && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowSources(!showSources)}
+                className="text-xs"
+              >
+                <FileText className="mr-1 h-3 w-3" />
+                Fontes
+              </Button>
+            )}
+          </div>
           <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowCreateOpportunityDialog(true)}
-              className="ml-auto"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowCreateOpportunityDialog(true)}
           >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Criar Oportunidade
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Criar Oportunidade
           </Button>
         </div>
+
+        {showSources && !isDemoMode && (
+          <div className="mt-3 pt-3 border-t border-black/5 dark:border-white/10">
+            <h5 className="text-xs font-medium mb-2">Feedbacks que geraram este insight:</h5>
+            <div className="space-y-1">
+              {sources.map((source: any) => (
+                <div key={source.feedback_id} className="text-xs text-muted-foreground">
+                  • {source.feedbacks?.title} ({source.feedbacks?.source})
+                  {source.feedbacks?.customer_name && ` - ${source.feedbacks.customer_name}`}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {!isDemoMode && (
-        <CreateOpportunityDialog
-          open={showCreateOpportunityDialog}
-          onOpenChange={setShowCreateOpportunityDialog}
-          insightTitle={insight.title}
-          insightDescription={insight.description}
-          insightId={insight.id}
-        />
-      )}
+      <CreateOpportunityDialog
+        open={showCreateOpportunityDialog}
+        onOpenChange={setShowCreateOpportunityDialog}
+        insightTitle={insight.title}
+        insightDescription={insight.description}
+        insightId={insight.id}
+      />
     </>
   );
 };

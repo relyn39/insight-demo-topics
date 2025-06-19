@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Lightbulb } from 'lucide-react';
 import { InsightList } from '@/components/insights/InsightList';
 import { GenerateInsightsButton } from '@/components/insights/GenerateInsightsButton';
+import { DemoModeSettings } from '@/components/DemoModeSettings';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useDemoMode } from '@/hooks/useDemoMode';
@@ -75,6 +76,8 @@ const TopicsAnalysis = () => {
           </header>
 
           <main className="flex-1 p-6 space-y-6 max-w-7xl mx-auto">
+            <DemoModeSettings />
+            
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

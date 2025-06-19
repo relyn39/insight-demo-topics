@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Insight } from '@/types/insights';
 import { InsightCard } from './InsightCard';

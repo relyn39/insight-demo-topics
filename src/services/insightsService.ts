@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Insight } from '@/types/insights';
 
-export const fetchInsights = async (timeFilter: 'all' | 'lastMonth' = 'all'): Promise<Insight[]> => {
+export const fetchInsights = async (timeFilter: 'all' | 'lastMonth' = 'lastMonth'): Promise<Insight[]> => {
   // Verificar se o modo demonstração está ativo
   const isDemoMode = localStorage.getItem('feedback-hub-demo-mode') === 'true';
   
@@ -59,7 +59,7 @@ export const fetchInsights = async (timeFilter: 'all' | 'lastMonth' = 'all'): Pr
     `)
     .eq('user_id', user.id);
 
-  // Aplicar filtro de tempo se especificado
+  // Aplicar filtro de tempo - sempre usar lastMonth como padrão
   if (timeFilter === 'lastMonth') {
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);

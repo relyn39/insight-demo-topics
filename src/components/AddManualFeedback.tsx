@@ -44,6 +44,47 @@ export const AddManualFeedback = ({ setOpen }: { setOpen: (open: boolean) => voi
     },
   });
 
+  const updateLatestItemsFromFeedback = async (feedbackData: any) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    try {
+      // Buscar itens existentes para atualizar contagem
+      const { data: existingItems } = await supabase
+        .from('latest_items')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('title', feedbackData.title);
+
+      if (existingItems && existingItems.length > 0) {
+        // Atualizar item existente
+        const existingItem = existingItems[0];
+        await supabase
+          .from('latest_items')
+          .update({
+            count: existingItem.count + 1,
+            updated_at: new Date().toISOString(),
+            change_percentage: Math.floor(Math.random() * 20) - 10
+          })
+          .eq('id', existingItem.id);
+      } else {
+        // Criar novo item
+        await supabase
+          .from('latest_items')
+          .insert({
+            user_id: user.id,
+            title: feedbackData.title,
+            count: 1,
+            sentiment: 'neutral',
+            change_percentage: Math.floor(Math.random() * 20) - 10,
+            keywords: []
+          });
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar latest_items:', error);
+    }
+  };
+
   const onSubmit = async (values: AddManualFeedbackFormValues) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -64,13 +105,21 @@ export const AddManualFeedback = ({ setOpen }: { setOpen: (open: boolean) => voi
 
       if (error) throw error;
 
+      // Atualizar latest_items
+      await updateLatestItemsFromFeedback(feedbackData);
+
       toast({
         title: 'Sucesso!',
         description: 'Feedback adicionado manualmente.',
       });
+      
+      // Invalidar queries para atualizar as listas
       await queryClient.invalidateQueries({ queryKey: ['feedbacks'] });
+      await queryClient.invalidateQueries({ queryKey: ['latest-items'] });
       await queryClient.invalidateQueries();
+      
       setOpen(false);
+      form.reset();
     } catch (error: any) {
       toast({
         title: 'Erro ao adicionar feedback',
