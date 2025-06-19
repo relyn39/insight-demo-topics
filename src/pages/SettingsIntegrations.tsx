@@ -1,19 +1,21 @@
 
 import React from 'react';
 import { IntegrationsManager } from '@/components/IntegrationsManager';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/AppSidebar';
 
 const SettingsIntegrations = () => {
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">Integrações</h2>
-        <p className="text-muted-foreground">
-          Configure e gerencie suas conexões com sistemas externos
-        </p>
-      </div>
-      
-      <IntegrationsManager />
-    </div>
+    <SidebarProvider>
+      <AppSidebar />
+      <main className="flex-1 p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <SidebarTrigger />
+          <h1 className="text-3xl font-bold">Gerenciar Integrações</h1>
+        </div>
+        <IntegrationsManager />
+      </main>
+    </SidebarProvider>
   );
 };
 

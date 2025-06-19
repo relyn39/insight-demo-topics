@@ -1,5 +1,5 @@
 
-import { Home, Settings, Database, BarChart3, BrainCircuit, Users, LogOut } from "lucide-react"
+import { Home, Settings, Database, BarChart3, BrainCircuit, Users, LogOut, Map } from "lucide-react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { supabase } from "@/integrations/supabase/client"
 import { Constants } from "@/integrations/supabase/types"
@@ -20,6 +20,18 @@ const items = [
     title: "Dashboard",
     url: "/",
     icon: Home,
+    submenu: [
+      {
+        title: "Visão Geral",
+        url: "/",
+        icon: Home,
+      },
+      {
+        title: "Roadmap",
+        url: "/?tab=roadmap",
+        icon: Map,
+      }
+    ]
   },
   {
     title: "Feedback",
@@ -76,6 +88,14 @@ export function AppSidebar() {
     navigate('/auth')
   }
 
+  const isActiveItem = (item: any) => {
+    if (item.url === '/' && location.pathname === '/' && !location.search.includes('tab=roadmap')) return true;
+    if (item.url === '/?tab=roadmap' && location.search.includes('tab=roadmap')) return true;
+    if (item.url !== '/' && location.pathname === item.url) return true;
+    if (item.url !== '/' && location.pathname.startsWith(item.url)) return true;
+    return false;
+  }
+
   return (
     <Sidebar>
       <SidebarContent className="flex h-full flex-col justify-between">
@@ -86,18 +106,18 @@ export function AppSidebar() {
               {items.map((item) => (
                 <div key={item.title}>
                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={location.pathname === item.url || (item.url !== '/' && location.pathname.startsWith(item.url))}>
+                    <SidebarMenuButton asChild isActive={isActiveItem(item)}>
                       <Link to={item.url}>
                         <item.icon />
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                  {item.submenu && location.pathname.startsWith(item.url) && (
+                  {item.submenu && (location.pathname.startsWith(item.url === '/' ? '/' : item.url) || location.search.includes('tab=roadmap')) && (
                     <div className="ml-6 mt-1">
                       {item.submenu.map((subitem) => (
                         <SidebarMenuItem key={subitem.title}>
-                          <SidebarMenuButton asChild isActive={location.pathname === subitem.url} size="sm">
+                          <SidebarMenuButton asChild isActive={isActiveItem(subitem)} size="sm">
                             <Link to={subitem.url}>
                               <subitem.icon />
                               <span>{subitem.title}</span>

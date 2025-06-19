@@ -157,6 +157,36 @@ export type Database = {
           },
         ]
       }
+      insight_feedbacks: {
+        Row: {
+          feedback_id: string
+          insight_id: string
+        }
+        Insert: {
+          feedback_id: string
+          insight_id: string
+        }
+        Update: {
+          feedback_id?: string
+          insight_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insight_feedbacks_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "feedbacks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insight_feedbacks_insight_id_fkey"
+            columns: ["insight_id"]
+            isOneToOne: false
+            referencedRelation: "insights"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       insights: {
         Row: {
           action: string | null
@@ -225,6 +255,7 @@ export type Database = {
           is_active: boolean | null
           last_synced_at: string | null
           name: string
+          query_filter: string | null
           source: Database["public"]["Enums"]["feedback_source"]
           sync_frequency: Database["public"]["Enums"]["integration_sync_frequency"]
           updated_at: string | null
@@ -237,6 +268,7 @@ export type Database = {
           is_active?: boolean | null
           last_synced_at?: string | null
           name: string
+          query_filter?: string | null
           source: Database["public"]["Enums"]["feedback_source"]
           sync_frequency?: Database["public"]["Enums"]["integration_sync_frequency"]
           updated_at?: string | null
@@ -249,6 +281,7 @@ export type Database = {
           is_active?: boolean | null
           last_synced_at?: string | null
           name?: string
+          query_filter?: string | null
           source?: Database["public"]["Enums"]["feedback_source"]
           sync_frequency?: Database["public"]["Enums"]["integration_sync_frequency"]
           updated_at?: string | null

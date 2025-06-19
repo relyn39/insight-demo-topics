@@ -6,16 +6,21 @@ import { LatestItems } from './LatestItems';
 import { NaturalLanguageQuery } from './NaturalLanguageQuery';
 import { InsightsPanel } from './InsightsPanel';
 import { TrendChart } from './TrendChart';
+import Roadmap from './Roadmap';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
 import { syncIntegrations } from '@/services/integrationService';
+import { useSearchParams } from 'react-router-dom';
 
 export const FeedbackDashboard = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'overview';
 
   const handleUpdate = async () => {
     setIsUpdating(true);
@@ -50,6 +55,14 @@ export const FeedbackDashboard = () => {
     }
   };
 
+  const handleTabChange = (value: string) => {
+    if (value === 'overview') {
+      setSearchParams({});
+    } else {
+      setSearchParams({ tab: value });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -75,21 +88,34 @@ export const FeedbackDashboard = () => {
         </div>
       </div>
 
-      <MetricsOverview />
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <NaturalLanguageQuery />
-        <InsightsPanel />
-      </div>
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="overview" className="space-y-6">
+          <MetricsOverview />
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <NaturalLanguageQuery />
+            <InsightsPanel />
+          </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <TrendChart />
-        </div>
-        <SentimentAnalysis />
-      </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <TrendChart />
+            </div>
+            <SentimentAnalysis />
+          </div>
 
-      <LatestItems />
+          <LatestItems />
+        </TabsContent>
+        
+        <TabsContent value="roadmap" className="space-y-6">
+          <Roadmap />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Insight } from '@/types/insights';
 
-export const fetchInsights = async (): Promise<Insight[]> => {
+export const fetchInsights = async (timeFilter: 'all' | 'lastMonth' = 'all'): Promise<Insight[]> => {
   // Verificar se o modo demonstração está ativo
   const isDemoMode = localStorage.getItem('feedback-hub-demo-mode') === 'true';
   
@@ -48,11 +48,25 @@ export const fetchInsights = async (): Promise<Insight[]> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Usuário não autenticado.");
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('insights')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false });
+    .select(`
+      *,
+      insight_feedbacks!inner(
+        feedback_id,
+        feedbacks(id, title, source, created_at)
+      )
+    `)
+    .eq('user_id', user.id);
+
+  // Aplicar filtro de tempo se especificado
+  if (timeFilter === 'lastMonth') {
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    query = query.gte('created_at', oneMonthAgo.toISOString());
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
 
   if (error) throw error;
   return data || [];
@@ -83,4 +97,13 @@ export const generateInsights = async () => {
     }
 
     return data;
+};
+
+export const deleteInsight = async (insightId: string) => {
+  const { error } = await supabase
+    .from('insights')
+    .delete()
+    .eq('id', insightId);
+  
+  if (error) throw error;
 };

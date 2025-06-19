@@ -29,6 +29,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { X } from 'lucide-react';
 import { Constants } from '@/integrations/supabase/types';
 import { Loader2 } from 'lucide-react';
 
@@ -38,6 +40,7 @@ const insightSchema = z.object({
   action: z.string().optional(),
   type: z.enum(Constants.public.Enums.insight_type),
   severity: z.enum(Constants.public.Enums.insight_severity),
+  tags: z.array(z.string()).optional(),
 });
 
 export type InsightFormData = z.infer<typeof insightSchema>;
@@ -50,6 +53,20 @@ interface ReviewInsightDialogProps {
   isSaving: boolean;
 }
 
+const typeTranslations = {
+  'trend': 'Tendência',
+  'alert': 'Alerta',
+  'opportunity': 'Oportunidade',
+  'other': 'Outro'
+};
+
+const severityTranslations = {
+  'info': 'Informação',
+  'warning': 'Aviso',
+  'success': 'Sucesso',
+  'error': 'Erro'
+};
+
 export const ReviewInsightDialog: React.FC<ReviewInsightDialogProps> = ({
   insight,
   open,
@@ -59,16 +76,46 @@ export const ReviewInsightDialog: React.FC<ReviewInsightDialogProps> = ({
 }) => {
   const form = useForm<InsightFormData>({
     resolver: zodResolver(insightSchema),
+    defaultValues: {
+      tags: []
+    }
   });
+
+  const [newTag, setNewTag] = React.useState('');
 
   useEffect(() => {
     if (insight) {
-      form.reset(insight);
+      form.reset({
+        ...insight,
+        tags: insight.tags || []
+      });
     }
   }, [insight, form]);
 
   const onSubmit = (data: InsightFormData) => {
     onSave(data);
+  };
+
+  const addTag = () => {
+    if (newTag.trim()) {
+      const currentTags = form.getValues('tags') || [];
+      if (!currentTags.includes(newTag.trim())) {
+        form.setValue('tags', [...currentTags, newTag.trim()]);
+      }
+      setNewTag('');
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    const currentTags = form.getValues('tags') || [];
+    form.setValue('tags', currentTags.filter(tag => tag !== tagToRemove));
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addTag();
+    }
   };
 
   return (
@@ -127,7 +174,9 @@ export const ReviewInsightDialog: React.FC<ReviewInsightDialogProps> = ({
                         </FormControl>
                         <SelectContent>
                           {Constants.public.Enums.insight_type.map(type => (
-                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                            <SelectItem key={type} value={type}>
+                              {typeTranslations[type as keyof typeof typeTranslations]}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -149,7 +198,9 @@ export const ReviewInsightDialog: React.FC<ReviewInsightDialogProps> = ({
                         </FormControl>
                         <SelectContent>
                           {Constants.public.Enums.insight_severity.map(sev => (
-                            <SelectItem key={sev} value={sev}>{sev}</SelectItem>
+                            <SelectItem key={sev} value={sev}>
+                              {severityTranslations[sev as keyof typeof severityTranslations]}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -171,6 +222,33 @@ export const ReviewInsightDialog: React.FC<ReviewInsightDialogProps> = ({
                   </FormItem>
                 )}
               />
+              
+              <div className="space-y-2">
+                <FormLabel>Palavras-chave / Tags</FormLabel>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Adicionar tag..."
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                  />
+                  <Button type="button" onClick={addTag} size="sm">
+                    Adicionar
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(form.watch('tags') || []).map((tag) => (
+                    <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                      {tag}
+                      <X
+                        className="h-3 w-3 cursor-pointer"
+                        onClick={() => removeTag(tag)}
+                      />
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
                   Cancelar
