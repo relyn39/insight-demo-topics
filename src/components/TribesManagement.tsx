@@ -108,11 +108,15 @@ export const TribesManagement = () => {
 
         <TabsContent value="tribes" className="space-y-4">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center">
                 <Building className="mr-2 h-5 w-5" />
                 Tribos ({tribes.length})
               </CardTitle>
+              <Button onClick={() => setShowAddTribeDialog(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Nova Tribo
+              </Button>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -139,11 +143,15 @@ export const TribesManagement = () => {
 
         <TabsContent value="squads" className="space-y-4">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center">
                 <Users className="mr-2 h-5 w-5" />
                 Squads ({squads.length})
               </CardTitle>
+              <Button onClick={() => setShowAddSquadDialog(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Nova Squad
+              </Button>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -174,6 +182,94 @@ export const TribesManagement = () => {
         open={showAddUserDialog} 
         onOpenChange={setShowAddUserDialog}
       />
+
+      {/* Add Tribe Dialog */}
+      <Dialog open={showAddTribeDialog} onOpenChange={setShowAddTribeDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nova Tribo</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="tribe-name">Nome</Label>
+              <Input
+                id="tribe-name"
+                value={tribeForm.name}
+                onChange={(e) => setTribeForm({ ...tribeForm, name: e.target.value })}
+                placeholder="Nome da tribo"
+              />
+            </div>
+            <div>
+              <Label htmlFor="tribe-description">Descrição</Label>
+              <Textarea
+                id="tribe-description"
+                value={tribeForm.description}
+                onChange={(e) => setTribeForm({ ...tribeForm, description: e.target.value })}
+                placeholder="Descrição da tribo"
+              />
+            </div>
+            <Button onClick={handleCreateTribe} disabled={createTribe.isPending}>
+              {createTribe.isPending ? 'Criando...' : 'Criar Tribo'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Squad Dialog */}
+      <Dialog open={showAddSquadDialog} onOpenChange={setShowAddSquadDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nova Squad</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="squad-tribe">Tribo</Label>
+              <Select value={squadForm.tribe_id} onValueChange={(value) => setSquadForm({ ...squadForm, tribe_id: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma tribo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {tribes.map((tribe) => (
+                    <SelectItem key={tribe.id} value={tribe.id}>
+                      {tribe.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="squad-name">Nome</Label>
+              <Input
+                id="squad-name"
+                value={squadForm.name}
+                onChange={(e) => setSquadForm({ ...squadForm, name: e.target.value })}
+                placeholder="Nome da squad"
+              />
+            </div>
+            <div>
+              <Label htmlFor="squad-description">Descrição</Label>
+              <Textarea
+                id="squad-description"
+                value={squadForm.description}
+                onChange={(e) => setSquadForm({ ...squadForm, description: e.target.value })}
+                placeholder="Descrição da squad"
+              />
+            </div>
+            <div>
+              <Label htmlFor="squad-jira">URL do Quadro Jira</Label>
+              <Input
+                id="squad-jira"
+                value={squadForm.jira_board_url}
+                onChange={(e) => setSquadForm({ ...squadForm, jira_board_url: e.target.value })}
+                placeholder="https://empresa.atlassian.net/boards/123"
+              />
+            </div>
+            <Button onClick={handleCreateSquad} disabled={createSquad.isPending}>
+              {createSquad.isPending ? 'Criando...' : 'Criar Squad'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       
       {/* Edit Tribe Dialog */}
       <Dialog open={!!editingTribe} onOpenChange={() => setEditingTribe(null)}>

@@ -51,15 +51,14 @@ export const AddUserDialog: React.FC<AddUserDialogProps> = ({ open, onOpenChange
 
   const addUserMutation = useMutation({
     mutationFn: async (values: z.infer<typeof addUserSchema>) => {
-      const { data, error } = await supabase.auth.signUp({
+      // Usar o admin API para criar usuário sem confirmação de email
+      const { data, error } = await supabase.auth.admin.createUser({
         email: values.email,
         password: values.password,
-        options: {
-          data: {
-            full_name: values.full_name,
-          },
-          emailRedirectTo: `${window.location.origin}/`,
+        user_metadata: {
+          full_name: values.full_name,
         },
+        email_confirm: true, // Confirma automaticamente o email
       });
 
       if (error) {
@@ -68,17 +67,19 @@ export const AddUserDialog: React.FC<AddUserDialogProps> = ({ open, onOpenChange
       return data;
     },
     onSuccess: () => {
-      toast.success('Usuário convidado com sucesso! Um email de confirmação foi enviado.');
+      toast.success('Usuário criado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['users'] });
       onOpenChange(false);
       form.reset();
     },
     onError: (error: any) => {
-      toast.error(`Erro ao adicionar usuário: ${error.message}`);
+      console.error('Error creating user:', error);
+      toast.error(`Erro ao criar usuário: ${error.message}`);
     },
   });
 
   const onSubmit = (values: z.infer<typeof addUserSchema>) => {
+    console.log('Creating user with values:', values);
     addUserMutation.mutate(values);
   };
 
@@ -146,7 +147,7 @@ export const AddUserDialog: React.FC<AddUserDialogProps> = ({ open, onOpenChange
                 </Button>
               </DialogClose>
               <Button type="submit" disabled={addUserMutation.isPending}>
-                {addUserMutation.isPending ? 'Adicionando...' : 'Adicionar Usuário'}
+                {addUserMutation.isPending ? 'Criando...' : 'Criar Usuário'}
               </Button>
             </DialogFooter>
           </form>

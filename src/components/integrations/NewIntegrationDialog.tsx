@@ -106,7 +106,10 @@ export const NewIntegrationDialog: React.FC<NewIntegrationDialogProps> = ({ load
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading || !newIntegration.source || !newIntegration.name}>
+            <Button 
+              type="submit" 
+              disabled={loading || !newIntegration.source || !newIntegration.name}
+            >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

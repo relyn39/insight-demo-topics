@@ -88,10 +88,10 @@ export const CreateOpportunityDialog = ({
         throw insightError;
       }
         
-      return title;
+      return opportunity;
     },
-    onSuccess: (title) => {
-      toast({ title: "Oportunidade Criada!", description: `"${title}" foi adicionado ao seu roadmap.` });
+    onSuccess: (opportunity) => {
+      toast({ title: "Oportunidade Criada!", description: `"${opportunity.title}" foi adicionada ao seu roadmap.` });
       queryClient.invalidateQueries({ queryKey: ['product_opportunities'] });
       queryClient.invalidateQueries({ queryKey: ['insights'] });
       queryClient.invalidateQueries({ queryKey: ['insights-as-topics'] });
@@ -186,7 +186,10 @@ export const CreateOpportunityDialog = ({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleCreateOpportunity} disabled={createOpportunityMutation.isPending}>
+            <Button 
+              onClick={handleCreateOpportunity} 
+              disabled={createOpportunityMutation.isPending}
+            >
               {createOpportunityMutation.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
