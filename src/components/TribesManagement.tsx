@@ -1,12 +1,17 @@
+
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Users, UserPlus } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Users, UserPlus, Building, Edit, Trash2 } from 'lucide-react';
 import { AddUserDialog } from './AddUserDialog';
+import { useTribes } from '@/hooks/useTribes';
+import { Tribe, Squad, CreateTribeData, CreateSquadData } from '@/types/tribes';
 
 export const TribesManagement = () => {
   const [showAddTribeDialog, setShowAddTribeDialog] = useState(false);
