@@ -34,6 +34,8 @@ interface ProductOpportunity {
           title: string;
           source: string;
           customer_name?: string;
+          external_created_at?: string;
+          created_at: string;
         };
       }>;
     };
@@ -65,7 +67,9 @@ const fetchOpportunities = async (): Promise<ProductOpportunity[]> => {
               id,
               title,
               source,
-              customer_name
+              customer_name,
+              external_created_at,
+              created_at
             )
           )
         )
@@ -96,6 +100,12 @@ const Roadmap = () => {
 
   const toggleSources = (opportunityId: string) => {
     setShowingSources(showingSources === opportunityId ? null : opportunityId);
+  };
+
+  const formatFeedbackDate = (feedback: any) => {
+    const date = feedback.external_created_at || feedback.created_at;
+    if (!date) return '';
+    return new Date(date).toLocaleDateString('pt-BR');
   };
 
   return (
@@ -154,7 +164,7 @@ const Roadmap = () => {
                                 className="text-xs mt-2 p-0 h-auto"
                               >
                                 <FileText className="mr-1 h-3 w-3" />
-                                Ver Fontes ({opp.opportunity_insights.length})
+                                Ver Fontes ({opp.opportunity_insights.length} insight{opp.opportunity_insights.length > 1 ? 's' : ''})
                               </Button>
                             )}
                           </div>
@@ -171,20 +181,27 @@ const Roadmap = () => {
 
                         {showingSources === opp.id && opp.opportunity_insights && (
                           <div className="mt-3 pt-3 border-t border-border">
-                            <h5 className="text-xs font-medium mb-2">Insights e Feedbacks:</h5>
-                            <div className="space-y-2">
+                            <h5 className="text-xs font-medium mb-2">Origem desta oportunidade:</h5>
+                            <div className="space-y-3">
                               {opp.opportunity_insights.map((oppInsight) => (
                                 <div key={oppInsight.insight_id} className="text-xs border-l-2 border-blue-200 pl-2">
-                                  <div className="font-medium text-blue-800 dark:text-blue-300">
-                                    • {oppInsight.insights.title}
+                                  <div className="font-medium text-blue-800 dark:text-blue-300 mb-1">
+                                    📋 Insight: {oppInsight.insights.title}
                                   </div>
                                   <div className="ml-2 space-y-1">
+                                    <div className="text-xs text-muted-foreground font-medium">Feedbacks que geraram este insight:</div>
                                     {oppInsight.insights.insight_feedbacks?.map((insightFeedback) => (
-                                      <div key={insightFeedback.feedback_id} className="text-muted-foreground">
-                                        - {insightFeedback.feedbacks.title} ({insightFeedback.feedbacks.source})
-                                        {insightFeedback.feedbacks.customer_name && 
-                                          ` - ${insightFeedback.feedbacks.customer_name}`
-                                        }
+                                      <div key={insightFeedback.feedback_id} className="text-muted-foreground ml-2">
+                                        • {insightFeedback.feedbacks.title}
+                                        <div className="text-xs opacity-75">
+                                          Fonte: {insightFeedback.feedbacks.source}
+                                          {insightFeedback.feedbacks.customer_name && 
+                                            ` • Cliente: ${insightFeedback.feedbacks.customer_name}`
+                                          }
+                                          {formatFeedbackDate(insightFeedback.feedbacks) && 
+                                            ` • Data: ${formatFeedbackDate(insightFeedback.feedbacks)}`
+                                          }
+                                        </div>
                                       </div>
                                     ))}
                                   </div>

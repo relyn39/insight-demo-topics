@@ -60,15 +60,17 @@ const AddOpportunityDialog = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado.');
       
-      const { error } = await supabase.from('product_opportunities').insert({
+      const { data, error } = await supabase.from('product_opportunities').insert({
         title: values.title,
         description: values.description || null,
         user_id: user.id,
         status: 'backlog',
-        tribe_id: values.tribe_id === 'none' ? null : values.tribe_id || null,
-        squad_id: values.squad_id === 'none' ? null : values.squad_id || null,
-      });
+        tribe_id: values.tribe_id === 'none' || !values.tribe_id ? null : values.tribe_id,
+        squad_id: values.squad_id === 'none' || !values.squad_id ? null : values.squad_id,
+      }).select();
+      
       if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       toast({ title: "Sucesso!", description: "Oportunidade criada e adicionada ao backlog." });
@@ -77,11 +79,13 @@ const AddOpportunityDialog = () => {
       form.reset();
     },
     onError: (err: Error) => {
+      console.error('Erro ao criar oportunidade:', err);
       toast({ title: "Erro ao criar oportunidade", description: err.message, variant: 'destructive' });
     },
   });
 
   const onSubmit = (values: OpportunityFormValues) => {
+    console.log('Submitting opportunity:', values);
     createOpportunityMutation.mutate(values);
   };
 

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { IntegrationSource, IntegrationConfig, JiraConfig, NotionConfig, ZohoConfig } from './types';
 import { JiraConfigForm } from './config-forms/JiraConfigForm';
 import { NotionConfigForm } from './config-forms/NotionConfigForm';
@@ -25,11 +25,24 @@ export const NewIntegrationDialog: React.FC<NewIntegrationDialogProps> = ({ load
     config: {} as IntegrationConfig,
   });
 
-  const handleCreate = async () => {
-    const success = await onCreate(newIntegration);
-    if (success) {
-      setNewIntegration({ source: '' as IntegrationSource, name: '', config: {} });
-      setIsOpen(false);
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Creating integration:', newIntegration);
+    
+    if (!newIntegration.source || !newIntegration.name) {
+      console.error('Missing required fields');
+      return;
+    }
+    
+    try {
+      const success = await onCreate(newIntegration);
+      if (success) {
+        console.log('Integration created successfully');
+        setNewIntegration({ source: '' as IntegrationSource, name: '', config: {} });
+        setIsOpen(false);
+      }
+    } catch (error) {
+      console.error('Error creating integration:', error);
     }
   };
   
@@ -57,41 +70,54 @@ export const NewIntegrationDialog: React.FC<NewIntegrationDialogProps> = ({ load
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Criar Nova Integração</DialogTitle>
-          <DialogDescription>Configure uma nova integração com seus sistemas externos</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="source">Plataforma</Label>
-            <Select onValueChange={(value: IntegrationSource) => setNewIntegration({ source: value, name: '', config: {} })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma plataforma" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="jira">Jira</SelectItem>
-                <SelectItem value="notion">Notion</SelectItem>
-                <SelectItem value="zoho">Zoho</SelectItem>
-                <SelectItem value="zapier">Zapier</SelectItem>
-              </SelectContent>
-            </Select>
+        <form onSubmit={handleCreate}>
+          <DialogHeader>
+            <DialogTitle>Criar Nova Integração</DialogTitle>
+            <DialogDescription>Configure uma nova integração com seus sistemas externos</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="source">Plataforma</Label>
+              <Select onValueChange={(value: IntegrationSource) => setNewIntegration({ source: value, name: '', config: {} })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma plataforma" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="jira">Jira</SelectItem>
+                  <SelectItem value="notion">Notion</SelectItem>
+                  <SelectItem value="zoho">Zoho</SelectItem>
+                  <SelectItem value="zapier">Zapier</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="name">Nome da Integração</Label>
+              <Input
+                id="name"
+                value={newIntegration.name}
+                onChange={(e) => setNewIntegration(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Ex: Jira - Projeto Principal"
+                required
+              />
+            </div>
+            {renderConfigForm()}
           </div>
-          <div>
-            <Label htmlFor="name">Nome da Integração</Label>
-            <Input
-              id="name"
-              value={newIntegration.name}
-              onChange={(e) => setNewIntegration(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="Ex: Jira - Projeto Principal"
-            />
-          </div>
-          {renderConfigForm()}
-        </div>
-        <DialogFooter>
-          <Button onClick={handleCreate} disabled={loading}>
-            {loading ? 'Criando...' : 'Criar Integração'}
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={loading || !newIntegration.source || !newIntegration.name}>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Criando...
+                </>
+              ) : (
+                'Criar Integração'
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

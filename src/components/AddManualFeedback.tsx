@@ -49,6 +49,8 @@ export const AddManualFeedback = ({ setOpen }: { setOpen: (open: boolean) => voi
     if (!user) return;
 
     try {
+      console.log('Updating latest items for feedback:', feedbackData.title);
+      
       // Buscar itens existentes para atualizar contagem
       const { data: existingItems } = await supabase
         .from('latest_items')
@@ -59,7 +61,7 @@ export const AddManualFeedback = ({ setOpen }: { setOpen: (open: boolean) => voi
       if (existingItems && existingItems.length > 0) {
         // Atualizar item existente
         const existingItem = existingItems[0];
-        await supabase
+        const { error } = await supabase
           .from('latest_items')
           .update({
             count: existingItem.count + 1,
@@ -67,9 +69,15 @@ export const AddManualFeedback = ({ setOpen }: { setOpen: (open: boolean) => voi
             change_percentage: Math.floor(Math.random() * 20) - 10
           })
           .eq('id', existingItem.id);
+          
+        if (error) {
+          console.error('Error updating existing latest_item:', error);
+        } else {
+          console.log('Updated existing latest item');
+        }
       } else {
         // Criar novo item
-        await supabase
+        const { error } = await supabase
           .from('latest_items')
           .insert({
             user_id: user.id,
@@ -79,6 +87,12 @@ export const AddManualFeedback = ({ setOpen }: { setOpen: (open: boolean) => voi
             change_percentage: Math.floor(Math.random() * 20) - 10,
             keywords: []
           });
+          
+        if (error) {
+          console.error('Error creating new latest_item:', error);
+        } else {
+          console.log('Created new latest item');
+        }
       }
     } catch (error) {
       console.error('Erro ao atualizar latest_items:', error);
@@ -86,6 +100,8 @@ export const AddManualFeedback = ({ setOpen }: { setOpen: (open: boolean) => voi
   };
 
   const onSubmit = async (values: AddManualFeedbackFormValues) => {
+    console.log('Submitting manual feedback:', values);
+    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado.');
@@ -101,9 +117,16 @@ export const AddManualFeedback = ({ setOpen }: { setOpen: (open: boolean) => voi
         status: 'new',
       };
 
-      const { error } = await supabase.from('feedbacks').insert(feedbackData);
+      console.log('Inserting feedback:', feedbackData);
 
-      if (error) throw error;
+      const { data, error } = await supabase.from('feedbacks').insert(feedbackData).select();
+
+      if (error) {
+        console.error('Error inserting feedback:', error);
+        throw error;
+      }
+
+      console.log('Feedback inserted successfully:', data);
 
       // Atualizar latest_items
       await updateLatestItemsFromFeedback(feedbackData);
@@ -121,6 +144,7 @@ export const AddManualFeedback = ({ setOpen }: { setOpen: (open: boolean) => voi
       setOpen(false);
       form.reset();
     } catch (error: any) {
+      console.error('Error in onSubmit:', error);
       toast({
         title: 'Erro ao adicionar feedback',
         description: error.message,

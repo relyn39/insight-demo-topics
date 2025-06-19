@@ -41,6 +41,8 @@ export const CreateOpportunityDialog = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado.");
       
+      console.log('Creating opportunity with data:', { title, description, tribeId, squadId });
+      
       // Criar oportunidade
       const { data: opportunity, error: opportunityError } = await supabase
         .from('product_opportunities')
@@ -49,13 +51,18 @@ export const CreateOpportunityDialog = ({
           description: description,
           user_id: user.id,
           status: 'backlog',
-          tribe_id: tribeId || null,
-          squad_id: squadId || null,
+          tribe_id: tribeId && tribeId !== 'none' ? tribeId : null,
+          squad_id: squadId && squadId !== 'none' ? squadId : null,
         })
         .select()
         .single();
 
-      if (opportunityError) throw opportunityError;
+      if (opportunityError) {
+        console.error('Error creating opportunity:', opportunityError);
+        throw opportunityError;
+      }
+
+      console.log('Opportunity created:', opportunity);
 
       // Vincular insight à oportunidade
       const { error: linkError } = await supabase
@@ -65,7 +72,10 @@ export const CreateOpportunityDialog = ({
           insight_id: insightId
         });
 
-      if (linkError) throw linkError;
+      if (linkError) {
+        console.error('Error linking insight to opportunity:', linkError);
+        throw linkError;
+      }
 
       // Marcar insight como convertido
       const { error: insightError } = await supabase
@@ -73,7 +83,10 @@ export const CreateOpportunityDialog = ({
         .update({ status: 'converted' })
         .eq('id', insightId);
 
-      if (insightError) throw insightError;
+      if (insightError) {
+        console.error('Error updating insight status:', insightError);
+        throw insightError;
+      }
         
       return title;
     },
@@ -87,11 +100,13 @@ export const CreateOpportunityDialog = ({
       setSelectedSquadId('');
     },
     onError: (err: Error) => {
+      console.error('Error in createOpportunityMutation:', err);
       toast({ title: "Erro ao criar oportunidade", description: err.message, variant: 'destructive' });
     },
   });
 
   const handleCreateOpportunity = () => {
+    console.log('Handle create opportunity clicked');
     createOpportunityMutation.mutate({
       title: insightTitle,
       description: insightDescription,
@@ -124,6 +139,7 @@ export const CreateOpportunityDialog = ({
             <div>
               <Label htmlFor="tribe-select">Tribo (opcional)</Label>
               <Select value={selectedTribeId} onValueChange={(value) => {
+                console.log('Tribe selected:', value);
                 setSelectedTribeId(value);
                 setSelectedSquadId('');
               }}>
@@ -145,7 +161,10 @@ export const CreateOpportunityDialog = ({
               <Label htmlFor="squad-select">Squad (opcional)</Label>
               <Select 
                 value={selectedSquadId} 
-                onValueChange={setSelectedSquadId}
+                onValueChange={(value) => {
+                  console.log('Squad selected:', value);
+                  setSelectedSquadId(value);
+                }}
                 disabled={!selectedTribeId || selectedTribeId === 'none'}
               >
                 <SelectTrigger>
