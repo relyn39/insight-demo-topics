@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Users, UserPlus, Building, Edit, Trash2 } from 'lucide-react';
 import { AddUserDialog } from './AddUserDialog';
+import { UsersList } from './UsersList';
 import { useTribes } from '@/hooks/useTribes';
 import { Tribe, Squad, CreateTribeData, CreateSquadData } from '@/types/tribes';
 
@@ -80,30 +80,7 @@ export const TribesManagement = () => {
         </TabsList>
 
         <TabsContent value="users" className="space-y-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  Gerenciar Usuários
-                </CardTitle>
-                <CardDescription>
-                  Adicione e gerencie usuários do sistema
-                </CardDescription>
-              </div>
-              <Button onClick={() => setShowAddUserDialog(true)}>
-                <UserPlus className="mr-2 h-4 w-4" />
-                Adicionar Usuário
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                <p>A lista de usuários será implementada em breve.</p>
-                <p className="text-sm">Por enquanto, você pode adicionar novos usuários usando o botão acima.</p>
-              </div>
-            </CardContent>
-          </Card>
+          <UsersList />
         </TabsContent>
 
         <TabsContent value="tribes" className="space-y-4">
