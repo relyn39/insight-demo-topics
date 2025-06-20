@@ -53,7 +53,7 @@ export const AddUserDialog: React.FC<AddUserDialogProps> = ({ open, onOpenChange
     mutationFn: async (values: z.infer<typeof addUserSchema>) => {
       console.log('Creating user with values:', values);
       
-      // Usar signUp normal ao invés da API de administração
+      // Usar signUp para criar o usuário
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
@@ -61,8 +61,7 @@ export const AddUserDialog: React.FC<AddUserDialogProps> = ({ open, onOpenChange
           data: {
             full_name: values.full_name,
           },
-          // Como não queremos confirmação de email, vamos criar o usuário diretamente
-          emailRedirectTo: undefined
+          emailRedirectTo: undefined // Remove confirmação de email
         }
       });
 
@@ -71,23 +70,30 @@ export const AddUserDialog: React.FC<AddUserDialogProps> = ({ open, onOpenChange
         throw error;
       }
 
-      // Se o usuário foi criado mas ainda precisa de confirmação,
-      // vamos tentar inserir o perfil manualmente
+      console.log('User created:', data.user);
+
+      // Força a inserção do perfil na tabela profiles
       if (data.user) {
-        console.log('User created:', data.user);
+        console.log('Inserting profile for user:', data.user.id);
         
-        // Tentar inserir o perfil diretamente na tabela profiles
-        const { error: profileError } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .insert({
             id: data.user.id,
             email: values.email,
             full_name: values.full_name
-          });
+          })
+          .select()
+          .single();
 
         if (profileError) {
           console.error('Profile creation error:', profileError);
-          // Se der erro, não vamos falhar a operação toda
+          // Não falhar se o perfil já existir
+          if (!profileError.message.includes('duplicate')) {
+            throw profileError;
+          }
+        } else {
+          console.log('Profile created:', profileData);
         }
       }
 
