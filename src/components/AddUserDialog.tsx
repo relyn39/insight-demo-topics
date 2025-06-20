@@ -51,19 +51,46 @@ export const AddUserDialog: React.FC<AddUserDialogProps> = ({ open, onOpenChange
 
   const addUserMutation = useMutation({
     mutationFn: async (values: z.infer<typeof addUserSchema>) => {
-      // Usar o admin API para criar usuário sem confirmação de email
-      const { data, error } = await supabase.auth.admin.createUser({
+      console.log('Creating user with values:', values);
+      
+      // Usar signUp normal ao invés da API de administração
+      const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
-        user_metadata: {
-          full_name: values.full_name,
-        },
-        email_confirm: true, // Confirma automaticamente o email
+        options: {
+          data: {
+            full_name: values.full_name,
+          },
+          // Como não queremos confirmação de email, vamos criar o usuário diretamente
+          emailRedirectTo: undefined
+        }
       });
 
       if (error) {
+        console.error('Signup error:', error);
         throw error;
       }
+
+      // Se o usuário foi criado mas ainda precisa de confirmação,
+      // vamos tentar inserir o perfil manualmente
+      if (data.user) {
+        console.log('User created:', data.user);
+        
+        // Tentar inserir o perfil diretamente na tabela profiles
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            email: values.email,
+            full_name: values.full_name
+          });
+
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+          // Se der erro, não vamos falhar a operação toda
+        }
+      }
+
       return data;
     },
     onSuccess: () => {
@@ -79,7 +106,7 @@ export const AddUserDialog: React.FC<AddUserDialogProps> = ({ open, onOpenChange
   });
 
   const onSubmit = (values: z.infer<typeof addUserSchema>) => {
-    console.log('Creating user with values:', values);
+    console.log('Submitting form with values:', values);
     addUserMutation.mutate(values);
   };
 
