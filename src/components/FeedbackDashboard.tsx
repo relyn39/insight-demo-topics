@@ -22,7 +22,16 @@ export const FeedbackDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'overview';
 
+  // Adicionar logs de auditoria para o dashboard
+  React.useEffect(() => {
+    console.log('📋 [AUDIT] FeedbackDashboard mounted:', {
+      activeTab,
+      timestamp: new Date().toISOString()
+    });
+  }, [activeTab]);
+
   const handleUpdate = async () => {
+    console.log('🔄 [AUDIT] Starting manual data update:', new Date().toISOString());
     setIsUpdating(true);
     toast({
       title: "Atualizando dados...",
@@ -31,6 +40,7 @@ export const FeedbackDashboard = () => {
 
     try {
       await syncIntegrations(queryClient);
+      console.log('🔄 [AUDIT] Manual data update succeeded');
 
       toast({
         title: "Sucesso!",
@@ -38,6 +48,7 @@ export const FeedbackDashboard = () => {
       });
 
     } catch (error: any) {
+      console.error('🔄 [AUDIT] Manual data update failed:', error);
       if (error.message === "Nenhuma integração ativa para sincronizar.") {
         toast({
           title: "Nenhuma integração ativa",
@@ -56,6 +67,7 @@ export const FeedbackDashboard = () => {
   };
 
   const handleTabChange = (value: string) => {
+    console.log('📋 [AUDIT] Tab changed:', { from: activeTab, to: value });
     if (value === 'overview') {
       setSearchParams({});
     } else {

@@ -14,8 +14,14 @@ interface LatestItem {
 }
 
 const fetchLatestItems = async (): Promise<LatestItem[]> => {
+  console.log('📊 [AUDIT] Fetching latest items...');
+  console.log('📊 [AUDIT] Fetch timestamp:', new Date().toISOString());
+  
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return [];
+  if (!user) {
+    console.log('📊 [AUDIT] No user found for latest items fetch');
+    return [];
+  }
 
   const { data, error } = await supabase
     .from('latest_items')
@@ -25,9 +31,15 @@ const fetchLatestItems = async (): Promise<LatestItem[]> => {
     .limit(10);
 
   if (error) {
-    console.error('Erro ao buscar últimos itens:', error);
+    console.error('📊 [AUDIT] Erro ao buscar últimos itens:', error);
     throw new Error('Não foi possível carregar os últimos itens.');
   }
+
+  console.log('📊 [AUDIT] Latest items fetched successfully:', {
+    count: data?.length || 0,
+    items: data?.map(item => ({ id: item.id, title: item.title })),
+    timestamp: new Date().toISOString()
+  });
 
   return (data || []).map(item => ({
     id: item.id,
@@ -40,6 +52,8 @@ const fetchLatestItems = async (): Promise<LatestItem[]> => {
 };
 
 const generateLatestItemsFunction = async () => {
+  console.log('⚡ [AUDIT] Generating latest items...');
+  
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Usuário não autenticado.");
 
@@ -48,9 +62,11 @@ const generateLatestItemsFunction = async () => {
   });
 
   if (error) {
+    console.error('⚡ [AUDIT] Error generating latest items:', error);
     throw new Error(`Falha ao gerar últimos itens: ${error.message}`);
   }
 
+  console.log('⚡ [AUDIT] Latest items generated successfully');
   return data;
 };
 
@@ -61,20 +77,32 @@ export const useLatestItems = () => {
 
   const { data: latestItems, isLoading, isError, error } = useQuery({
     queryKey: ['latest-items'],
-    queryFn: isDemoMode ? () => Promise.resolve(getDemoLatestItems()) : fetchLatestItems,
+    queryFn: isDemoMode ? () => {
+      console.log('📊 [AUDIT] Using demo mode for latest items');
+      return Promise.resolve(getDemoLatestItems());
+    } : fetchLatestItems,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0, // Always refetch to avoid cache issues
   });
 
   const generateLatestItemsMutation = useMutation({
-    mutationFn: isDemoMode ? () => Promise.resolve() : generateLatestItemsFunction,
+    mutationFn: isDemoMode ? () => {
+      console.log('⚡ [AUDIT] Demo mode: simulating latest items generation');
+      return Promise.resolve();
+    } : generateLatestItemsFunction,
     onSuccess: () => {
       if (isDemoMode) {
+        console.log('⚡ [AUDIT] Demo mode: latest items updated');
         toast({ title: "Últimos itens atualizados! (DEMO)", description: "Os itens foram atualizados em modo demonstração." });
       } else {
+        console.log('⚡ [AUDIT] Latest items generation succeeded');
         toast({ title: "Últimos itens atualizados!", description: "Os itens mais mencionados foram atualizados." });
       }
       queryClient.invalidateQueries({ queryKey: ['latest-items'] });
     },
     onError: (err: Error) => {
+      console.error('⚡ [AUDIT] Latest items generation failed:', err);
       toast({ title: "Erro ao atualizar itens", description: err.message, variant: 'destructive' });
     },
   });

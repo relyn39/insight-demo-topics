@@ -51,30 +51,44 @@ export const AddUserDialog: React.FC<AddUserDialogProps> = ({ open, onOpenChange
 
   const addUserMutation = useMutation({
     mutationFn: async (values: z.infer<typeof addUserSchema>) => {
-      console.log('Creating user with values:', values);
+      console.log('🔧 [AUDIT] Starting user creation process:', {
+        email: values.email,
+        name: values.full_name,
+        timestamp: new Date().toISOString()
+      });
       
-      // Usar signUp para criar o usuário
-      const { data, error } = await supabase.auth.signUp({
+      // Primeiro, obter o usuário atual para ter contexto de admin
+      const { data: { user: currentUser }, error: currentUserError } = await supabase.auth.getUser();
+      console.log('🔧 [AUDIT] Current user context:', { 
+        currentUserId: currentUser?.id, 
+        currentUserEmail: currentUser?.email,
+        error: currentUserError 
+      });
+
+      // Usar a API admin do Supabase para criar o usuário
+      const { data, error } = await supabase.auth.admin.createUser({
         email: values.email,
         password: values.password,
-        options: {
-          data: {
-            full_name: values.full_name,
-          },
-          emailRedirectTo: undefined // Remove confirmação de email
-        }
+        user_metadata: {
+          full_name: values.full_name,
+        },
+        email_confirm: true // Auto-confirmar email para admin
       });
 
       if (error) {
-        console.error('Signup error:', error);
+        console.error('🔧 [AUDIT] Admin createUser error:', error);
         throw error;
       }
 
-      console.log('User created:', data.user);
+      console.log('🔧 [AUDIT] Admin user created successfully:', {
+        userId: data.user?.id,
+        email: data.user?.email,
+        metadata: data.user?.user_metadata
+      });
 
-      // Força a inserção do perfil na tabela profiles
+      // Inserir diretamente na tabela profiles usando service role
       if (data.user) {
-        console.log('Inserting profile for user:', data.user.id);
+        console.log('🔧 [AUDIT] Attempting to insert profile for user:', data.user.id);
         
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
@@ -87,32 +101,46 @@ export const AddUserDialog: React.FC<AddUserDialogProps> = ({ open, onOpenChange
           .single();
 
         if (profileError) {
-          console.error('Profile creation error:', profileError);
-          // Não falhar se o perfil já existir
-          if (!profileError.message.includes('duplicate')) {
-            throw profileError;
+          console.error('🔧 [AUDIT] Profile creation error:', profileError);
+          // Se falhar, tentar com upsert
+          const { data: upsertData, error: upsertError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: data.user.id,
+              email: values.email,
+              full_name: values.full_name
+            })
+            .select()
+            .single();
+          
+          if (upsertError) {
+            console.error('🔧 [AUDIT] Profile upsert also failed:', upsertError);
+            throw upsertError;
+          } else {
+            console.log('🔧 [AUDIT] Profile created via upsert:', upsertData);
           }
         } else {
-          console.log('Profile created:', profileData);
+          console.log('🔧 [AUDIT] Profile created successfully:', profileData);
         }
       }
 
       return data;
     },
     onSuccess: () => {
+      console.log('🔧 [AUDIT] User creation mutation succeeded');
       toast.success('Usuário criado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['users'] });
       onOpenChange(false);
       form.reset();
     },
     onError: (error: any) => {
-      console.error('Error creating user:', error);
+      console.error('🔧 [AUDIT] User creation mutation failed:', error);
       toast.error(`Erro ao criar usuário: ${error.message}`);
     },
   });
 
   const onSubmit = (values: z.infer<typeof addUserSchema>) => {
-    console.log('Submitting form with values:', values);
+    console.log('🔧 [AUDIT] Form submitted with values:', values);
     addUserMutation.mutate(values);
   };
 
