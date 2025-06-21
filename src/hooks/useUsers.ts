@@ -24,6 +24,19 @@ export const useUsers = () => {
       console.log('🔍 [AUDIT] Fetching users from profiles table...');
       console.log('🔍 [AUDIT] Query timestamp:', new Date().toISOString());
       
+      // Primeiro verificar se há usuário autenticado
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      console.log('🔍 [AUDIT] Current user for profiles query:', { 
+        userId: currentUser?.id, 
+        email: currentUser?.email 
+      });
+
+      if (!currentUser) {
+        console.log('🔍 [AUDIT] No authenticated user, returning empty array');
+        return [];
+      }
+
+      // Tentar buscar todos os perfis (pode falhar se não houver política para isso)
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -31,7 +44,22 @@ export const useUsers = () => {
 
       if (error) {
         console.error('🔍 [AUDIT] Error fetching users:', error);
-        throw error;
+        console.log('🔍 [AUDIT] Trying to fetch only current user profile as fallback');
+        
+        // Fallback: buscar apenas o perfil do usuário atual
+        const { data: currentUserProfile, error: currentUserError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single();
+
+        if (currentUserError) {
+          console.error('🔍 [AUDIT] Error fetching current user profile:', currentUserError);
+          return [];
+        }
+
+        console.log('🔍 [AUDIT] Fetched current user profile only:', currentUserProfile);
+        return currentUserProfile ? [currentUserProfile] : [];
       }
 
       console.log('🔍 [AUDIT] Users fetched successfully:', {

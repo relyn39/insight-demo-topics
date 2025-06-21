@@ -57,78 +57,61 @@ export const AddUserDialog: React.FC<AddUserDialogProps> = ({ open, onOpenChange
         timestamp: new Date().toISOString()
       });
       
-      // Primeiro, obter o usuário atual para ter contexto de admin
-      const { data: { user: currentUser }, error: currentUserError } = await supabase.auth.getUser();
-      console.log('🔧 [AUDIT] Current user context:', { 
-        currentUserId: currentUser?.id, 
-        currentUserEmail: currentUser?.email,
-        error: currentUserError 
-      });
-
-      // Usar a API admin do Supabase para criar o usuário
-      const { data, error } = await supabase.auth.admin.createUser({
+      // Usar signUp normal em vez de admin.createUser
+      const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
-        user_metadata: {
-          full_name: values.full_name,
-        },
-        email_confirm: true // Auto-confirmar email para admin
+        options: {
+          data: {
+            full_name: values.full_name,
+          },
+          emailRedirectTo: `${window.location.origin}/`
+        }
       });
 
       if (error) {
-        console.error('🔧 [AUDIT] Admin createUser error:', error);
+        console.error('🔧 [AUDIT] SignUp error:', error);
         throw error;
       }
 
-      console.log('🔧 [AUDIT] Admin user created successfully:', {
+      console.log('🔧 [AUDIT] User signed up successfully:', {
         userId: data.user?.id,
         email: data.user?.email,
-        metadata: data.user?.user_metadata
+        needsConfirmation: !data.session
       });
 
-      // Inserir diretamente na tabela profiles usando service role
-      if (data.user) {
-        console.log('🔧 [AUDIT] Attempting to insert profile for user:', data.user.id);
+      // Se o usuário foi criado mas não há sessão, significa que precisa confirmar email
+      if (data.user && !data.session) {
+        console.log('🔧 [AUDIT] User created but needs email confirmation');
         
-        const { data: profileData, error: profileError } = await supabase
+        // Inserir manualmente na tabela profiles já que o trigger pode não funcionar sem confirmação
+        const { error: profileError } = await supabase
           .from('profiles')
-          .insert({
+          .upsert({
             id: data.user.id,
             email: values.email,
             full_name: values.full_name
-          })
-          .select()
-          .single();
+          });
 
         if (profileError) {
           console.error('🔧 [AUDIT] Profile creation error:', profileError);
-          // Se falhar, tentar com upsert
-          const { data: upsertData, error: upsertError } = await supabase
-            .from('profiles')
-            .upsert({
-              id: data.user.id,
-              email: values.email,
-              full_name: values.full_name
-            })
-            .select()
-            .single();
-          
-          if (upsertError) {
-            console.error('🔧 [AUDIT] Profile upsert also failed:', upsertError);
-            throw upsertError;
-          } else {
-            console.log('🔧 [AUDIT] Profile created via upsert:', upsertData);
-          }
+          // Não falhar aqui, o perfil será criado quando o usuário confirmar o email
         } else {
-          console.log('🔧 [AUDIT] Profile created successfully:', profileData);
+          console.log('🔧 [AUDIT] Profile created manually');
         }
       }
 
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       console.log('🔧 [AUDIT] User creation mutation succeeded');
-      toast.success('Usuário criado com sucesso!');
+      
+      if (data.user && !data.session) {
+        toast.success('Usuário criado! Um email de confirmação foi enviado.');
+      } else {
+        toast.success('Usuário criado com sucesso!');
+      }
+      
       queryClient.invalidateQueries({ queryKey: ['users'] });
       onOpenChange(false);
       form.reset();
@@ -157,7 +140,7 @@ export const AddUserDialog: React.FC<AddUserDialogProps> = ({ open, onOpenChange
         <DialogHeader>
           <DialogTitle>Adicionar Novo Usuário</DialogTitle>
           <DialogDescription>
-            Preencha os dados abaixo para criar um novo usuário.
+            Preencha os dados abaixo para criar um novo usuário. Um email de confirmação será enviado.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
