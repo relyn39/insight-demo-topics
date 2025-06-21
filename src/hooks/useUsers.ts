@@ -1,6 +1,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuthSession } from '@/hooks/useAuthSession';
 
 export interface UserProfile {
   id: string;
@@ -13,6 +14,7 @@ export interface UserProfile {
 
 export const useUsers = () => {
   const queryClient = useQueryClient();
+  const { isAuthenticated, validateSession } = useAuthSession();
 
   const {
     data: users = [],
@@ -24,7 +26,14 @@ export const useUsers = () => {
       console.log('🔍 [AUDIT] Fetching users from profiles table...');
       console.log('🔍 [AUDIT] Query timestamp:', new Date().toISOString());
       
-      // Primeiro verificar se há usuário autenticado
+      // Validar sessão antes de fazer a query
+      const isSessionValid = await validateSession();
+      if (!isSessionValid) {
+        console.log('🔍 [AUDIT] Session invalid, skipping user fetch');
+        return [];
+      }
+
+      // Verificar se há usuário autenticado
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       console.log('🔍 [AUDIT] Current user for profiles query:', { 
         userId: currentUser?.id, 
@@ -70,9 +79,10 @@ export const useUsers = () => {
       
       return data as UserProfile[];
     },
-    refetchOnWindowFocus: true,
+    enabled: isAuthenticated, // Só executar se autenticado
+    refetchOnWindowFocus: false, // Evitar refetch desnecessário
     refetchOnMount: true,
-    staleTime: 0, // Always refetch to avoid cache issues
+    staleTime: 1000 * 60 * 2, // 2 minutos de cache
   });
 
   const deleteUser = useMutation({
